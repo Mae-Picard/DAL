@@ -109,30 +109,29 @@ def update_maze():
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
 
 
-runFrames = s.get_fps() * 2
+runFrames = s.FPS * 2
 selected_slot = 0
 while not window_should_close():
     # ------------------------------------------------------------------------------------------------------------------
     # Gestion des paramètres liés au temps
     # ------------------------------------------------------------------------------------------------------------------
-    fps = round(s.get_fps() + 1)
     if campain.in_world and campain.switching_stage:
         campain.gen_campain(campain.campain_stage)
         gun_frame = s.gun.frames[0]
         campain.switching_stage = False
 
+    fps = round(s.get_fps() + 1)
     runFrames += 1
     if runFrames >= fps * 60: runFrames = 1
-    if runFrames % fps == 0:
-        s.mob_strength += math.sqrt(1.001 - 1 / s.mob_strength) / 16
-        s.gun.bullets += 2 if s.gun.type == "main" else 5
 
     if not campain.in_menu:
-        sm = 121 * max([0.009, abs(s.player.accels[0]), abs(s.player.accels[1])])
-        s.y_player_offset = math.sin(runFrames / ((s.get_fps() + 1) / 3) * math.sqrt(sm)) ** 2 / (s.get_fps() + 1) * (2 * sm)
+        if runFrames % fps == 0:
+            s.mob_strength += math.sqrt((1 + fps/1000) - 1 / s.mob_strength) / 16
+            s.gun.bullets = min(14, s.gun.bullets + 2) if s.gun.type == "main" else min(26, s.gun.bullets + 5)
 
-        if campain.campain_stage == 0 and runFrames % fps == 0:
-            update_maze()
+        sm = 121 * max([0.02, abs(s.player.movements[0]), abs(s.player.movements[1])])
+        s.y_player_offset = math.sin(runFrames / fps * 2 * min(3, max(1, sm))) / (s.get_fps() + 1) * sm / 4
+        if campain.campain_stage == 0 and runFrames % fps == 0: update_maze()
 
         if s.player.is_in_air: s.y_player_offset = 0
         if s.player.shield > 0: s.player.shield -= 1
@@ -191,8 +190,13 @@ while not window_should_close():
         draw_texture(gun_frame, mb_x + s.gun.offset - int(6 * get_mouse_delta().x) + int(70 * s.y_player_offset), mb_y -
                      int(400 + 100 * s.y_player_offset) + int(get_mouse_delta().y ** 2) + 10, (200, 210, 150, 255))
 
-        for i in range(round(-s.player.life) // 2, round(s.player.life) // 2 + (round(s.player.life) % 2) + 1):
-            draw_texture(s.UI_life_texture, mb_x + i * 32, mb_y - 170, (150 - i * 7, 100 + i * 7, 120 + i * 5, 255))
+        life = int(s.player.life)
+        bullets = int(s.gun.bullets)
+        for i in range(-(bullets >> 1), (bullets >> 1) + (bullets % 2)):
+            draw_texture(s.UI_bullets_texture, mb_x + i * 32, mb_y - 160, (150 - i * 7, 100 + i * 7, 170 + i * 3, 200))
+        for i in range(-(life >> 1), (life >> 1) + (life % 2)):
+            draw_texture(s.UI_life_texture, mb_x + i * 32, mb_y - 170, (150 - i * 7, 100 + i * 7, 120 + i * 5, 200))
+
 
         draw_texture_hotbar()
         draw_texture(s.UI_slot_texture, mb_x - 650 + int(selected_slot) * 112, mb_y - 215, (200, 210, 150, 255))
@@ -212,7 +216,7 @@ while not window_should_close():
         for x in range(s.sWidth // 250):
             for y in range(s.sHeight // 250):
                 draw_texture(s.menu_background, 750 * x, 750 * y, WHITE)
-               
+
         mouse_x, mouse_y = get_mouse_position().x, -get_mouse_position().y + my + 128
         mouse_pos = ((int(mouse_x) >> 7) << 7, (int(mouse_y) >> 7) << 7)
 

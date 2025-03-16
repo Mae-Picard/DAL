@@ -109,6 +109,7 @@ UI_indicators_texture = load_texture("resources/indicators.png")
 UI_slot_texture = load_texture("resources/slot_highlight.png")
 UI_crossair_texture = load_texture("resources/crossair.png")
 UI_life_texture = load_texture("resources/life.png")
+UI_bullets_texture = load_texture("resources/bullets.png")
 FX_bullet_texture = load_texture("resources/bullet.png")
 FX_shadow_texture = resize_image_to_screen("resources/shadow.png", sWidth, sHeight)
 menu_background = load_texture("resources/menubackground.png")
@@ -159,9 +160,9 @@ class Player:
         x = camera.position.x
         y = camera.position.y
         z = camera.position.z
-        for f1 in [-.35, 0, .35]:
-            for f2 in [-.35, 0, .35]:
-                for f3 in [-.35, 0, .35]:
+        for f1 in [-.35, .35]:
+            for f2 in [-.35, .35]:
+                for f3 in [-.35, .35]:
                     if (round(x + f1), round(y + f2 - .3), round(z + f3)) in blocks or \
                             (round(x + f1), round(y + f2 - 1), round(z + f3)) in blocks:
                         return True
@@ -169,17 +170,19 @@ class Player:
 
     def update_movement(self):
         """Gère le déplacement et la gravité du joueur."""
+        global friction
+        friction = 1 + 12 / FPS * (get_fps() / FPS) + 0.1
         for k, i, m in [(KEY_W, 0, 1), (KEY_S, 0, -1), (KEY_D, 1, 1), (KEY_A, 1, -1)]:
             if is_key_down(k):
                 self.accels[i] = (self.accels[i] + m * speed / 100) / friction
-                if self.is_sprinting: self.accels[i] *= 1.2 * (get_fps() / 60)
-                if self.is_in_air: self.accels[i] /= 1.1 * (get_fps() / 60)
+                if self.is_sprinting: self.accels[i] *= 1.2
+                if self.is_in_air: self.accels[i] /= 1.1
         for i in [0, 1]:
-            self.movements[i] = (self.movements[i] + self.accels[i]) / friction * (get_fps() / 60 + 0.0001)
-            self.accels[i] /= friction * (get_fps() / 60 + 0.0001)
+            self.movements[i] = (self.movements[i] + self.accels[i]) / friction
+            self.accels[i] /= friction
 
         # Gestion de la gravité et de la position verticale
-        a = (self.movements[2] + self.accels[2] - gravity / (get_fps() + 1)) / friction
+        a = (self.movements[2] + self.accels[2] - gravity / 60) / friction
         if camera.position.y + a > artificial_heigh + self.block_height:
             self.is_in_air = True
             self.movements[2] = a
@@ -404,7 +407,7 @@ class Gun:
         self.speed = speed
         self.offset = offset
         self.type = type
-        self.bullets = 10 if type == "main" else 30
+        self.bullets = 14 if type == "main" else 26
 
     def switch(self):
         """Passe d'une arme à l'autre."""
@@ -540,19 +543,19 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
     x, y, z = player.pos
     x1, y1, z1 = pos
     vx, vy, vz = player.v
-    c = distance_of_view // 2 - 2
-    x2, y2, z2 = x + c * vx, y + max(-0.5, c * vy), z + c * vz,
-    d2 = math.sqrt((x1 - x2) ** 2 + (z1 - z2) ** 2)
-    if d2 < c + 1:
-        d = max(0.01, max(d2, math.sqrt((x1 - x) ** 2 + 4 * (y1 - y2) ** 2 + (z1 - z) ** 2)) * 16)
-        b = abs(1 - distance_of_view * 17 / d)
+    c = (distance_of_view >> 1) - 2
+    x2, y2, z2 = x1 - x - 6 * vx, y1 - y - 4 * vy, z1 - z - 6 * vz
+    d2 = math.sqrt(x2 ** 2 + 4 * y2 ** 2 + z2 ** 2)
+    if d2 < c:
+        d = max(3, min(d2, math.sqrt((x1 - x) ** 4 + (y1 - y) ** 4 + (z1 - z) ** 4)) * 18)
+        b = abs(1 - distance_of_view * 9 / d)
         t = d / r
         c1, c2, c3, _ = color
         bc1, bc2, bc3, _ = fade_color
         model.transform = matrix_rotate(axis, rotation_r)
         draw_model(model, pos, scale,
-                      (min(255, int(max(bc1 * b, c1 - t ** 1.05 * 0.7))),
-                       min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.75))),
+                      (min(255, int(max(bc1 * b, c1 - t ** 1.05 * 0.8))),
+                       min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.85))),
                        min(255, int(max(bc3 * b, c3 - t ** 1.06 * 0.9))), 255))
         return True # l'objet a été dessiné
     else:
@@ -610,7 +613,7 @@ def find_target(pos, yaw_rad, roll_rad):
     vx, vy, vz = (math.sin(yaw_rad), math.cos(roll_rad), -math.cos(yaw_rad))
     rangex = [-2.25, -1.5, -0.75, 0, 0.75, 1.5, 2.25]
     rangey = [-0.75, 0, 0.75]
-    for t in range(0, distance_of_view + 2):
+    for t in range(-1, distance_of_view + 2):
         rx, ry, rz = (x + vx * t, y + vy * t, z + vz * t)
         intrpos = (round(rx), round(ry), round(rz))
         if intrpos in mobs or intrpos in blocks:
