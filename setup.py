@@ -150,7 +150,7 @@ class Player:
         self.v = (0, 0, 0)  # Vecteur normal du joueur
         self.target = (0, 0, 0)  # Position que le joueur regarde
         self.life = 26  # Vies du joueur
-        self.shield = FPS  # Bouclier du joueur (durée)
+        self.shield = get_fps()  # Bouclier du joueur (durée)
         self.speed = 1.0 # Coefficient de vitesse
 
     def is_colliding(self):
@@ -172,14 +172,14 @@ class Player:
         for k, i, m in [(KEY_W, 0, 1), (KEY_S, 0, -1), (KEY_D, 1, 1), (KEY_A, 1, -1)]:
             if is_key_down(k):
                 self.accels[i] = (self.accels[i] + m * speed / 100) / friction
-                if self.is_sprinting: self.accels[i] *= 1.2
-                if self.is_in_air: self.accels[i] /= 1.1
+                if self.is_sprinting: self.accels[i] *= 1.2 * (get_fps() / 60)
+                if self.is_in_air: self.accels[i] /= 1.1 * (get_fps() / 60)
         for i in [0, 1]:
-            self.movements[i] = (self.movements[i] + self.accels[i]) / friction
-            self.accels[i] /= friction
+            self.movements[i] = (self.movements[i] + self.accels[i]) / friction * (get_fps() / 60 + 0.0001)
+            self.accels[i] /= friction * (get_fps() / 60 + 0.0001)
 
         # Gestion de la gravité et de la position verticale
-        a = (self.movements[2] + self.accels[2] - gravity / FPS) / friction
+        a = (self.movements[2] + self.accels[2] - gravity / (get_fps() + 1)) / friction
         if camera.position.y + a > artificial_heigh + self.block_height:
             self.is_in_air = True
             self.movements[2] = a
@@ -197,7 +197,7 @@ class Player:
         if self.roll <= 185 and self.roll >= 5: self.roll += get_mouse_delta().y * 0.45 * rH
         if self.roll > 185: self.roll = 185
         if self.roll < 5: self.roll = 5
-        self.v = (math.sin(self.yaw), math.cos(self.roll), -math.cos(self.yaw))
+        self.v = (math.sin(self.yaw * DEG2RAD), math.cos(self.roll * DEG2RAD), -math.cos(self.yaw * DEG2RAD))
         # gère les hitboxes et la mise à jour de la caméra
         z, x, y = self.movements
         update_camera_pro(camera, (0, 0, 0), (get_mouse_delta().x * 0.45 * rW, get_mouse_delta().y * 0.45 * rH, 0), 0)
@@ -321,8 +321,8 @@ class Mob:
         t_yaw = self.yaw + 180 * DEG2RAD
         vx, vz = (math.sin(t_yaw), math.cos(t_yaw))
         s = math.sqrt(mob_strength) * 0.5
-        self.movements[0] = self.speed * vx / FPS * (1 + self.life / self.initial_life) * s
-        self.movements[2] = self.speed * vz / FPS * (1 + self.life / self.initial_life) * s
+        self.movements[0] = self.speed * vx / get_fps() * (1 + self.life / self.initial_life) * s
+        self.movements[2] = self.speed * vz / get_fps() * (1 + self.life / self.initial_life) * s
 
 
     def seek_player(self):
@@ -362,7 +362,7 @@ class Mob:
         if draw_custom(self.pos, self.model, self.color, self.refraction, (0, 1, 0), self.yaw):
             if player.shield == 0 and (x - x1)**2 + (y - y1)**2 + (z - z1)**2 < 0.6:
                 player.life -= self.dmg * mob_strength ** 2
-                player.shield = FPS // 2
+                player.shield = get_fps() // 2
             draw_shadow_entity(self.pos, 1)
 
 
@@ -452,7 +452,6 @@ class Bullet:
                 mobs[r_pos].damage()
 
             self.model = none_model  # N'affiche plus la balle une fois la cible atteinte
-            small_boom(r_pos) # Fait une petite explosion à l'endroit de l'impact
 
         draw_model(self.model, (rx, ry, rz), 0.8 * m, (255, 255, 255, 150))
         draw_model(self.model, (rx, ry, rz), 1.0 * m, (200, 170, 150, 100))
@@ -461,11 +460,11 @@ class Bullet:
         """Gère les animations des balles vides."""
         global fade_color
         self.tick += 1
-        if self.tick <= FPS // 3:
+        if self.tick <= get_fps() // 3:
             if self.type == "main": self.draw_main_empty()
             if self.type == "riffle":
                 self.draw_riffle_empty()
-                if self.tick >= FPS // 7 and self.again != 0:
+                if self.tick >= get_fps() // 7 and self.again != 0:
                     _ = Bullet("riffle", self.again - 1)
                     fade_color = (200, 175, 150, 0)
                     player.movements[2] += gun.knockback / 10
@@ -475,14 +474,14 @@ class Bullet:
 
     def draw_main_empty(self):
         t = ((self.tick >> 2) << 2) - 3
-        y_offset = -300 - 120 * self.c + abs(16 * (t / (FPS // 30) - 1))
+        y_offset = -300 - 120 * self.c + abs(16 * (t / (get_fps() // 30) - 1))
         x_offset = 70 + int(14 * t) - int(6 * get_mouse_delta().x)
         draw_texture_ex(FX_bullet_texture, (sWidth // 2 + x_offset, sHeight + y_offset), (5 - 3 * self.c) * t, 1.3,
                         (200, 210, 150, 255))
 
     def draw_riffle_empty(self):
         t = ((self.tick // 3) * 3) + 2
-        y_offset = -300 - 50 * self.c + abs((10 + 20 * self.c) * (t / (FPS // 60) - (2 + 2 * self.c)) + t)
+        y_offset = -300 - 50 * self.c + abs((10 + 20 * self.c) * (t / (get_fps() / 60) - (2 + 2 * self.c)) + t)
         x_offset = int(200 + (20 + 10 * self.c) * t) - int(6 * get_mouse_delta().x)
         draw_texture_ex(FX_bullet_texture, (sWidth // 2 + x_offset, sHeight + y_offset), 10 * t + 90, 1.0,
                         (200, 210, 150, 255))
@@ -517,9 +516,9 @@ class Item:
             i = items[self.pos].index(self)
             del items[self.pos][i]
     
-        elif y > 3/FPS + 1 and (x, round(y - 1), z) not in blocks:
+        elif y > 3/get_fps() + 1 and (x, round(y - 1), z) not in blocks:
             del items[self.pos]
-            new_pos = (x, y - 3/FPS, z)
+            new_pos = (x, y - 3/get_fps(), z)
             self.pos = new_pos
             if new_pos in items:
                 items[new_pos].append(self)
@@ -529,7 +528,7 @@ class Item:
 
     def draw_item(self):
         self.update()
-        self.tick += 1/FPS
+        self.tick += 1/get_fps()
         if self.tick > 3.141592653589 * 2.0: self.tick = 0.0
         pos = (self.pos[0], self.pos[1] + math.sin(self.tick) / 20, self.pos[2])
         draw_custom(pos, self.model, self.color, self.refraction, (0, 1, 0), self.tick, 0.4)
@@ -541,10 +540,11 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
     x, y, z = player.pos
     x1, y1, z1 = pos
     vx, vy, vz = player.v
-    d = abs((x1 - x) + 0.5 * (1.1 * y1 - y) + (z1 - z))
-
-    if d * d2 < distance_of_view:
-        d = d * 18
+    c = distance_of_view // 2 - 2
+    x2, y2, z2 = x + c * vx, y + max(-0.5, c * vy), z + c * vz,
+    d2 = math.sqrt((x1 - x2) ** 2 + (z1 - z2) ** 2)
+    if d2 < c + 1:
+        d = max(0.01, max(d2, math.sqrt((x1 - x) ** 2 + 4 * (y1 - y2) ** 2 + (z1 - z) ** 2)) * 16)
         b = abs(1 - distance_of_view * 17 / d)
         t = d / r
         c1, c2, c3, _ = color

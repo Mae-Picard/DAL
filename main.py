@@ -10,7 +10,7 @@ def shoot():
         runFrames = 1
         gun_frame = s.gun.frames[1]
         s.gun.bullets -= 1
-        s.player.accels[0] -= s.gun.knockback / s.FPS
+        s.player.accels[0] -= s.gun.knockback / s.get_fps()
         s.y_player_offset += s.gun.knockback / 18
         s.fade_color = (220 + random.randint(-35, 35), 210 + random.randint(-20, 7), 155 + random.randint(-15, 45), 0)
         if s.gun.type == "main": _ = s.Bullet("main")
@@ -109,35 +109,36 @@ def update_maze():
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
 
 
-runFrames = s.FPS * 2
+runFrames = s.get_fps() * 2
 selected_slot = 0
 while not window_should_close():
     # ------------------------------------------------------------------------------------------------------------------
     # Gestion des paramètres liés au temps
     # ------------------------------------------------------------------------------------------------------------------
+    fps = round(s.get_fps() + 1)
     if campain.in_world and campain.switching_stage:
         campain.gen_campain(campain.campain_stage)
         gun_frame = s.gun.frames[0]
         campain.switching_stage = False
 
     runFrames += 1
-    if runFrames >= s.FPS * 60: runFrames = 1
-    if runFrames % s.FPS == 0:
+    if runFrames >= fps * 60: runFrames = 1
+    if runFrames % fps == 0:
         s.mob_strength += math.sqrt(1.001 - 1 / s.mob_strength) / 16
         s.gun.bullets += 2 if s.gun.type == "main" else 5
 
     if not campain.in_menu:
         sm = 121 * max([0.009, abs(s.player.accels[0]), abs(s.player.accels[1])])
-        s.y_player_offset = math.sin(runFrames / (s.FPS // 3) * math.sqrt(sm)) ** 2 / s.FPS * (2 * sm)
+        s.y_player_offset = math.sin(runFrames / ((s.get_fps() + 1) / 3) * math.sqrt(sm)) ** 2 / (s.get_fps() + 1) * (2 * sm)
 
-        if campain.campain_stage == 0 and runFrames % s.FPS == 0:
+        if campain.campain_stage == 0 and runFrames % fps == 0:
             update_maze()
 
         if s.player.is_in_air: s.y_player_offset = 0
         if s.player.shield > 0: s.player.shield -= 1
-        if s.player.is_dashing and s.player.dash_tick < s.FPS // 3:
+        if s.player.is_dashing and s.player.dash_tick < s.get_fps() // 3:
             s.player.dash_tick += 1
-            s.friction = 1 + (16 / (s.FPS // 3) * min(s.FPS // 3, s.player.dash_tick * 1.75)) / s.FPS
+            s.friction = 1 + (16 / (s.get_fps() // 3) * min(s.get_fps() // 3, s.player.dash_tick * 1.75)) / s.get_fps()
         else: s.player.is_dashing = False
         update_fade_color()
         # --------------------------------------------------------------------------------------------------------------
@@ -180,7 +181,7 @@ while not window_should_close():
         # Affichage de l'interface utilisateur
         # --------------------------------------------------------------------------------------------------------------
         mb_x, mb_y = (s.sWidth // 2, s.sHeight) # Milieu bas de l'écran
-        if runFrames % (s.FPS // s.gun.speed) == 0:
+        if runFrames % round(fps / s.gun.speed + 1) == 0:
             for i in range(1, s.gun.nb_frames):
                 if gun_frame == s.gun.frames[i]:
                     gun_frame = s.gun.frames[(i + 1) % s.gun.nb_frames]
@@ -201,6 +202,7 @@ while not window_should_close():
         draw_text(f"Mob Strength : {int(s.mob_strength * 100) / 100}", s.sWidth - 300, 150, 30, GREEN)
         draw_text(f"Player Damage : {int(s.gun.dmg * (1 + 3 * math.sqrt(s.mob_strength)) * 10) / 100}", s.sWidth - 320, 120, 30, GREEN)
         draw_text(f"Player Speed : {int(s.player.speed * 800) / 100}", s.sWidth - 300, 90, 30, GREEN)
+        draw_fps(s.sWidth - 100, 30)
         draw_texture(s.FX_shadow_texture, 0, 0, BLACK)
     # --------------------------------------------------------------------------------------------------------------
     # Affichage du menu

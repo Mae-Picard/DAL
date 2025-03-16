@@ -1,4 +1,4 @@
-r = 30
+r = 25
 
 import math
 import random
