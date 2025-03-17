@@ -69,22 +69,22 @@ def update_maze():
         # Régènère des monstres
         l = len(s.mobs)
         if s.mob_strength < 2:
-            for i in range(6):
-                x = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
-                z = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
+            for i in range(2):
+                x = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
+                z = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 1, 3, 2),
                                                 (s.mob_model2, 2, 5, 3)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 5:
-            for i in range(9):
-                x = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
-                z = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
+            for i in range(4):
+                x = (random.choice([-2, -1, 0, 1 , 2, 3]) - 0.5) * s.wall_length
+                z = (random.choice([-2, -1, 0, 1, 2, 3]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 1, 4, 2),
                                                 (s.mob_model2, 3, 7, 4),
                                                 (s.mob_model3, 7, 5, 3)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 15:
-            for i in range(11):
+            for i in range(5):
                 x = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
                 z = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 2, 5, 3),
@@ -92,7 +92,7 @@ def update_maze():
                                                 (s.mob_model3, 8, 8, 5)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 30:
-            for i in range(9):
+            for i in range(6):
                 x = (random.choice([-1, 2]) - 0.5) * s.wall_length
                 z = (random.choice([-1, 2]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 3, 5, 4),
@@ -100,9 +100,9 @@ def update_maze():
                                                 (s.mob_model3, 9, 8, 6)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         else:
-            for i in range(15):
-                x = (random.choice([-1, 2]) - 0.5) * s.wall_length
-                z = (random.choice([-1, 2]) - 0.5) * s.wall_length
+            for i in range(10):
+                x = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
+                z = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 3, 5, 4),
                                                 (s.mob_model2, 6, 9, 5),
                                                 (s.mob_model3, 10, 10, 7)])
@@ -203,10 +203,13 @@ while not window_should_close():
         draw_texture(s.UI_hotbar_texture, mb_x - 650, mb_y - 215, (200, 210, 150, 255))
         draw_texture(s.UI_indicators_texture, mb_x - 650, mb_y - 215, (200 * s.player.is_sprinting, 210, 150, 225))
         draw_texture(s.UI_crossair_texture, mb_x - int(get_mouse_delta().x), mb_y // 2, (200, 210, 150, 125))
-        draw_text(f"Mob Strength : {int(s.mob_strength * 100) / 100}", s.sWidth - 300, 150, 30, GREEN)
+        draw_text(f"Mob Strength : {int(s.mob_strength * 100) / 100}", s.sWidth - 300, 150, 30, RED)
         draw_text(f"Player Damage : {int(s.gun.dmg * (1 + 3 * math.sqrt(s.mob_strength)) * 10) / 100}", s.sWidth - 320, 120, 30, GREEN)
         draw_text(f"Player Speed : {int(s.player.speed * 800) / 100}", s.sWidth - 300, 90, 30, GREEN)
-        draw_fps(s.sWidth - 100, 30)
+        draw_text(f"X : {s.player.pos[0]}", s.sWidth - 200, 10, 20, WHITE)
+        draw_text(f"Y : {s.player.pos[1]}", s.sWidth - 200, 30, 20, LIGHTGRAY)
+        draw_text(f"Z : {s.player.pos[2]}", s.sWidth - 200, 50, 20, WHITE)
+        draw_fps(s.sWidth - 300, 10)
         draw_texture(s.FX_shadow_texture, 0, 0, BLACK)
     # --------------------------------------------------------------------------------------------------------------
     # Affichage du menu
