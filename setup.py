@@ -23,7 +23,7 @@ gravity = 3.75  # gravité
 friction = 1 + 16 / FPS  # friction / resistance de l'air
 speed = 1.25  # vitesse du joueur
 artificial_heigh = 2  # taille du joueur (en blocks)
-distance_of_view = campain.r  # = 20, les objets a plus de 20 blocks de distance disparaissent
+distance_of_view = campain.render_distance  # = 20, les objets a plus de 20 blocks de distance disparaissent
 range_view = range(-distance_of_view + 2, distance_of_view - 1)  # Liste de nombres
 FoV = 120  # grand FoV (Field of View = Champ de Vision) pour une impression de grandeur de l'espace
 y_player_offset = 0  # Déplacement vertical artificiel (pas, recul..)
@@ -477,7 +477,7 @@ class Bullet:
 
     def draw_main_empty(self):
         t = ((self.tick >> 2) << 2) - 3
-        y_offset = -300 - 120 * self.c + abs(16 * (t / (get_fps() // 30) - 1))
+        y_offset = -300 - 120 * self.c + abs(16 * (t / (get_fps() / 30) - 1))
         x_offset = 70 + int(14 * t) - int(6 * get_mouse_delta().x)
         draw_texture_ex(FX_bullet_texture, (sWidth // 2 + x_offset, sHeight + y_offset), (5 - 3 * self.c) * t, 1.3,
                         (200, 210, 150, 255))
@@ -543,20 +543,25 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
     x, y, z = player.pos
     x1, y1, z1 = pos
     vx, vy, vz = player.v
+
     c = (distance_of_view >> 1) - 2
-    x2, y2, z2 = x1 - x - 6 * vx, y1 - y - 4 * vy, z1 - z - 6 * vz
+
+    x2, y2, z2 = x1 - x - 6 * vx, y1 - y - 6 * vy, z1 - z - 6 * vz
     d2 = math.sqrt(x2 ** 2 + 4 * y2 ** 2 + z2 ** 2)
-    if d2 < c:
-        d = max(3, min(d2, math.sqrt((x1 - x) ** 4 + (y1 - y) ** 4 + (z1 - z) ** 4)) * 18)
+    if d2 < c + 5:
+        x3, y3, z3 = x1 - x - 2.5 * vx, y1 - y - vy, z1 - z - 2.5 * vz
+        d3 = x3 ** 2 + 2 * y3 ** 2 + z3 ** 2
+        if d3 < 9: d2 *= d3 / 9
+        d = max(3, d2 * 21)
         b = abs(1 - distance_of_view * 9 / d)
         t = d / r
         c1, c2, c3, _ = color
         bc1, bc2, bc3, _ = fade_color
         model.transform = matrix_rotate(axis, rotation_r)
         draw_model(model, pos, scale,
-                      (min(255, int(max(bc1 * b, c1 - t ** 1.05 * 0.8))),
-                       min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.85))),
-                       min(255, int(max(bc3 * b, c3 - t ** 1.06 * 0.9))), 255))
+                   (min(255, int(max(bc1 * b, c1 - t ** 1.05 * 0.8))),
+                    min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.85))),
+                    min(255, int(max(bc3 * b, c3 - t ** 1.06 * 0.9))), 255))
         return True # l'objet a été dessiné
     else:
         return False # l'objet n'a pas été dessiné
