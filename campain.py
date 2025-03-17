@@ -1,4 +1,4 @@
-r = 25
+render_distance = 30
 
 import math
 import random
@@ -12,9 +12,9 @@ switching_stage = True
 campain_stage = 0
 
 maze = {}
-N = r * 2
-for i in range(-r, r + 1):
-    for j in range(-r, r + 1):
+N = render_distance * 2
+for i in range(-render_distance, render_distance + 1):
+    for j in range(-render_distance, render_distance + 1):
         maze[(i, j)] = []
 maze[(0, 0)].append((0, 1))  # /
 maze[(0, 1)].append((1, 0))  # <  le joueur doit etre dans une de ces coordonées au départ
@@ -49,10 +49,10 @@ def gen_maze(offset_x, offset_y):
     global maze
     for _ in range(N):
         # Generate a starting cell within a safe inner area
-        orig_coord = (random.randint(-r + 2 + offset_x, r - 2 + offset_x),
-                      random.randint(-r + 2 + offset_y, r - 2 + offset_y))
+        orig_coord = (random.randint(-render_distance + 2 + offset_x, render_distance - 2 + offset_x),
+                      random.randint(-render_distance + 2 + offset_y, render_distance - 2 + offset_y))
         while len(maze[orig_coord]) > 0:
-            orig_coord = (random.randint(-r + offset_x, r + offset_x), random.randint(-r + offset_y, r + offset_y))
+            orig_coord = (random.randint(-render_distance + offset_x, render_distance + offset_x), random.randint(-render_distance + offset_y, render_distance + offset_y))
         dx, dy = random.choice([(0, 1), (-1, 0), (1, 0), (0, -1)])
         line = [orig_coord]
         while len(line) < N // 2:
@@ -70,9 +70,9 @@ def gen_maze(offset_x, offset_y):
     # Fill remaining areas
     while not is_maze_filled():
         orig_coord = (
-        random.randint(-r + 2 + offset_x, r - 2 + offset_x), random.randint(-r + 2 + offset_y, r - 2 + offset_y))
+            random.randint(-render_distance + 2 + offset_x, render_distance - 2 + offset_x), random.randint(-render_distance + 2 + offset_y, render_distance - 2 + offset_y))
         while len(maze[orig_coord]) > 0:
-            orig_coord = (random.randint(-r + offset_x, r + offset_x), random.randint(-r + offset_y, r + offset_y))
+            orig_coord = (random.randint(-render_distance + offset_x, render_distance + offset_x), random.randint(-render_distance + offset_y, render_distance + offset_y))
         path = rdm_walk([orig_coord])
         for coord in path[1:]:
             prev_coord = orig_coord
@@ -98,20 +98,20 @@ def add_maze_part(pos):
 
     # Déterminer la direction d'expansion
     if x >= current_max_x - threshold:
-        offset = (current_max_x + r, current_max_y + r if y > 0 else current_min_y - r)
+        offset = (current_max_x + render_distance, current_max_y + render_distance if y > 0 else current_min_y - render_distance)
     elif x <= current_min_x + threshold:
-        offset = (current_min_x - r, current_max_y + r if y > 0 else current_min_y - r)
+        offset = (current_min_x - render_distance, current_max_y + render_distance if y > 0 else current_min_y - render_distance)
     elif y >= current_max_y - threshold:
-        offset = (current_max_x + r if x > 0 else current_min_x - r, current_max_y + r)
+        offset = (current_max_x + render_distance if x > 0 else current_min_x - render_distance, current_max_y + render_distance)
     elif y <= current_min_y + threshold:
-        offset = (current_max_x + r if x > 0 else current_min_x - r, current_min_y - r)
+        offset = (current_max_x + render_distance if x > 0 else current_min_x - render_distance, current_min_y - render_distance)
     else:
         return False  # Pas près d'un bord
 
     # Créer une nouvelle section adjacente
     temp_maze = {}
-    for i in range(-r, r + 1):
-        for j in range(-r, r + 1):
+    for i in range(-render_distance, render_distance + 1):
+        for j in range(-render_distance, render_distance + 1):
             new_x = i + offset[0]
             new_y = j + offset[1]
             temp_maze[(new_x, new_y)] = []
