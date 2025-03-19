@@ -63,20 +63,20 @@ def draw_texture_hotbar():
 
 def update_maze():
         xp, _, zp = s.player.pos
-        # Régènère le labyrinthe autour du joueur
-        if campain.add_maze_part((round(xp), round(zp))):
-                campain.create_maze()
-        # Régènère des monstres
+        # Generates the maze around the player
+        if campain.add_chunck_maze(int(xp / s.wall_length), int(zp / s.wall_length)):
+            campain.create_maze(campain.maze)
+        # Summon monsters based on time spent in level
         l = len(s.mobs)
         if s.mob_strength < 2:
             for i in range(2):
                 x = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
                 z = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
-                model, a, b, c = random.choice([(s.mob_model1, 1, 3, 2),
-                                                (s.mob_model2, 2, 5, 3)])
+                model, a, b, c = random.choice([(s.mob_model1, 1, 4, 2),
+                                                (s.mob_model2, 3, 7, 4)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 5:
-            for i in range(4):
+            for i in range(2):
                 x = (random.choice([-2, -1, 0, 1 , 2, 3]) - 0.5) * s.wall_length
                 z = (random.choice([-2, -1, 0, 1, 2, 3]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 1, 4, 2),
@@ -84,28 +84,33 @@ def update_maze():
                                                 (s.mob_model3, 7, 5, 3)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 15:
-            for i in range(5):
+            for i in range(3):
                 x = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
                 z = (random.choice([-2, -1, 2, 3]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 2, 5, 3),
                                                 (s.mob_model2, 5, 9, 5),
-                                                (s.mob_model3, 8, 8, 5)])
+                                                (s.mob_model3, 8, 8, 5),
+                                                (s.mob_model4, 9, 10, 4)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         elif s.mob_strength < 30:
-            for i in range(6):
+            for i in range(5):
                 x = (random.choice([-1, 2]) - 0.5) * s.wall_length
                 z = (random.choice([-1, 2]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 3, 5, 4),
                                                 (s.mob_model2, 4, 9, 5),
-                                                (s.mob_model3, 9, 8, 6)])
+                                                (s.mob_model3, 9, 8, 6),
+                                                (s.mob_model4, 10, 11, 4),
+                                                (s.mob_model5, 20, 5, 5)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
         else:
-            for i in range(10):
-                x = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
-                z = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
+            for i in range(6):
+                x = (random.choice([-2, -1, 0, 1, 2, 3]) - 0.5) * s.wall_length
+                z = (random.choice([-2, -1, 0, 1, 2, 3]) - 0.5) * s.wall_length
                 model, a, b, c = random.choice([(s.mob_model1, 3, 5, 4),
                                                 (s.mob_model2, 6, 9, 5),
-                                                (s.mob_model3, 10, 10, 7)])
+                                                (s.mob_model3, 10, 10, 7),
+                                                (s.mob_model4, 10, 11, 5),
+                                                (s.mob_model5, 25, 7, 6)])
                 s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
 
 
@@ -120,9 +125,11 @@ while not window_should_close():
         gun_frame = s.gun.frames[0]
         campain.switching_stage = False
 
-    fps = round(s.get_fps() + 1)
+    fps = abs(round(s.get_fps())) + 1
     runFrames += 1
     if runFrames >= fps * 60: runFrames = 1
+    if s.gun.tick_after_shoot > 0: s.gun.tick_after_shoot += 1
+    if s.gun.tick_after_shoot > 15: s.gun.tick_after_shoot = 0
 
     if not campain.in_menu:
         if runFrames % fps == 0:
@@ -130,14 +137,14 @@ while not window_should_close():
             s.gun.bullets = min(14, s.gun.bullets + 2) if s.gun.type == "main" else min(26, s.gun.bullets + 5)
 
         sm = 121 * max([0.02, abs(s.player.movements[0]), abs(s.player.movements[1])])
-        s.y_player_offset = math.sin(runFrames / fps * 2 * min(3, max(1, sm))) / (s.get_fps() + 1) * sm / 4
-        if campain.campain_stage == 0 and runFrames % fps == 0: update_maze()
+        s.y_player_offset = math.sin(runFrames / fps * min(3, max(1, sm)) ** 2) / fps * sm / 4
+        if campain.campain_stage == 0 and runFrames % (fps // 3 + 1) == 0: update_maze()
 
         if s.player.is_in_air: s.y_player_offset = 0
         if s.player.shield > 0: s.player.shield -= 1
-        if s.player.is_dashing and s.player.dash_tick < s.get_fps() // 3:
+        if s.player.is_dashing and s.player.dash_tick < (fps // 5 + 1):
             s.player.dash_tick += 1
-            s.friction = 1 + (16 / (s.get_fps() // 3) * min(s.get_fps() // 3, s.player.dash_tick * 1.75)) / s.get_fps()
+            s.friction = 1 + (16 / (s.get_fps() // 3) * min(s.get_fps() // 3, s.player.dash_tick * 1.75)) / fps
         else: s.player.is_dashing = False
         update_fade_color()
         # --------------------------------------------------------------------------------------------------------------
@@ -187,9 +194,14 @@ while not window_should_close():
                     break
 
         for b in s.bullets: b.animate()
-        draw_texture(gun_frame, mb_x + s.gun.offset - int(6 * get_mouse_delta().x) + int(70 * s.y_player_offset), mb_y -
-                     int(400 + 100 * s.y_player_offset) + int(get_mouse_delta().y ** 2) + 10, (200, 210, 150, 255))
-
+        draw_texture(gun_frame, mb_x + s.gun.offset - int(6 * get_mouse_delta().x + get_mouse_delta().y * 3) + int(70 * s.y_player_offset),
+        mb_y - int(400 + 100 * s.y_player_offset) + int(get_mouse_delta().y * 5 + get_mouse_delta().x * 2) + 10,
+        (200, 210, 150, 255))
+        if s.gun.type == "main":
+            drag = int(4 * get_mouse_delta().x) + 8 * (s.gun.tick_after_shoot // 4 - 2) ** 2
+            draw_texture(s.flashlight_texture, -10 - drag // 2 + int(120 * s.y_player_offset),
+            mb_y - int(400 + 130 * s.y_player_offset) + 3 * int(get_mouse_delta().y) + 250 - int(2 * s.player.roll) - drag,
+            (200, 210, 150, 255))
         life = int(s.player.life)
         bullets = int(s.gun.bullets)
         for i in range(-(bullets >> 1), (bullets >> 1) + (bullets % 2)):
@@ -199,6 +211,7 @@ while not window_should_close():
 
 
         draw_texture_hotbar()
+        draw_texture(s.UI_base_layer_right, s.sWidth - 500, 0, (255, 210, 150, 255))
         draw_texture(s.UI_slot_texture, mb_x - 650 + int(selected_slot) * 112, mb_y - 215, (200, 210, 150, 255))
         draw_texture(s.UI_hotbar_texture, mb_x - 650, mb_y - 215, (200, 210, 150, 255))
         draw_texture(s.UI_indicators_texture, mb_x - 650, mb_y - 215, (200 * s.player.is_sprinting, 210, 150, 225))

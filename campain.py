@@ -1,131 +1,139 @@
-render_distance = 30
+render_distance = 16
+campain_stage = 0
+maze = {}
 
+import setup as s
 import math
 import random
 import pyray as pr
-import setup as s
 
 in_menu = False
 in_world = True
 switching_stage = True
 
-campain_stage = 0
 
-maze = {}
-N = render_distance * 2
-for i in range(-render_distance, render_distance + 1):
-    for j in range(-render_distance, render_distance + 1):
-        maze[(i, j)] = []
-maze[(0, 0)].append((0, 1))  # /
-maze[(0, 1)].append((1, 0))  # <  le joueur doit etre dans une de ces coordonées au départ
-maze[(1, 0)].append((1, 1))  # \
+def initialize_maze():
+    maze = {}
+    for x, y in [(0, 0), (-16, 0), (0, -16), (-16, -16)]:
+        maze = gen_empty_chunk(maze, x, y)
+        maze = gen_maze_chunck(maze, x, y)
+    return maze
 
 
-def is_maze_filled():
+def is_maze_filled(maze):
     for c in maze:
         if len(maze[c]) == 0:
             return False
     return True
 
 
-def rdm_walk(path):
-    if len(maze[path[-1]]) > 0:
-        return path
-    prev_x, prev_y = path[-1]
-    p = path.copy()  # Use a copy to avoid unintended mutations
-    dx, dy = random.choice([(0, 1), (-1, 0), (1, 0), (0, -1)])
-    new_pos = (prev_x + dx, prev_y + dy)
-    if new_pos in maze:
-        if new_pos not in path:
-            p.append(new_pos)
-        else:
-            # Truncate the path to form a loop
-            index = path.index(new_pos)
-            p = path[:index + 1]
-    return rdm_walk(p)
-
-
-def gen_maze(offset_x, offset_y):
-    global maze
-    for _ in range(N):
-        # Generate a starting cell within a safe inner area
-        orig_coord = (random.randint(-render_distance + 2 + offset_x, render_distance - 2 + offset_x),
-                      random.randint(-render_distance + 2 + offset_y, render_distance - 2 + offset_y))
-        while len(maze[orig_coord]) > 0:
-            orig_coord = (random.randint(-render_distance + offset_x, render_distance + offset_x), random.randint(-render_distance + offset_y, render_distance + offset_y))
+def gen_lines_maze(maze, less_x, less_y):
+    updated_maze = maze
+    for _ in range(8):
         dx, dy = random.choice([(0, 1), (-1, 0), (1, 0), (0, -1)])
-        line = [orig_coord]
-        while len(line) < N // 2:
-            tx, ty = line[-1]
-            next_cell = (tx + dx, ty + dy)
-            if next_cell not in maze:
-                break  # Stop if out of bounds
-            if len(maze[next_cell]) > 0:
-                break  # Stop if cell is already connected
-            # Add bidirectional connection
-            maze[(tx, ty)].append(next_cell)
-            maze[next_cell].append((tx, ty))
-            line.append(next_cell)
-
-    # Fill remaining areas
-    while not is_maze_filled():
-        orig_coord = (
-            random.randint(-render_distance + 2 + offset_x, render_distance - 2 + offset_x), random.randint(-render_distance + 2 + offset_y, render_distance - 2 + offset_y))
-        while len(maze[orig_coord]) > 0:
-            orig_coord = (random.randint(-render_distance + offset_x, render_distance + offset_x), random.randint(-render_distance + offset_y, render_distance + offset_y))
-        path = rdm_walk([orig_coord])
-        for coord in path[1:]:
-            prev_coord = orig_coord
-        if coord not in maze[prev_coord]:
-            maze[prev_coord].append(coord)
-        maze[coord].append(prev_coord)
-        orig_coord = coord
+        t = 0
+        flag = True
+        orig_coord = (random.randrange(less_x + 2, less_x + 14), random.randrange(less_y + 2, less_y + 14))
+        while flag and ((orig_coord not in updated_maze) or len(updated_maze[orig_coord]) > 0):
+            orig_coord = (random.randrange(less_x, less_x + 16), random.randrange(less_y, less_y + 16))
+            if t > 32: flag = False
+            t += 1
+        if flag:
+            previous_cell = orig_coord
+            ox, oy = orig_coord
+            for i in range(1, 9):
+                next_cell = (ox + dx * i, oy + dy * i)
+                if next_cell not in updated_maze: break # Stop if out of bounds
+                updated_maze = connect_cells(updated_maze, previous_cell, next_cell)
+                if len(updated_maze[next_cell]) > 0: break # Stop if cell is already connected
+                previous_cell = next_cell
+    return updated_maze
 
 
-def add_maze_part(pos):
+def rdm_walk(maze, path):
+    if len(maze[path[-1]]) > 0: return path
+    x, y = path[-1]
+    p = path.copy() # Use a copy to avoid unintended mutations
+    dx, dy = random.choice([(0, 1), (-1, 0), (1, 0), (0, -1)])
+    new_pos = (x + dx, y + dy)
+    if new_pos in maze:
+        if new_pos not in path: p.append(new_pos)
+        else: p = path[:path.index(new_pos) + 1] # Truncate the path to form a loop
+    return rdm_walk(maze, p)
+
+
+def gen_paths_maze(maze, less_x, less_y):
+    updated_maze = maze
+    t2 = 0
+    while not is_maze_filled(updated_maze) and t2 < 128:
+        t = 0
+        t2 += 1
+        flag = True
+        orig_coord = (random.randrange(less_x + 2, less_x + 14), random.randrange(less_y + 2, less_y + 14))
+        while flag and ((orig_coord not in updated_maze) or len(updated_maze[orig_coord]) > 0):
+            orig_coord = (random.randrange(less_x, less_x + 16), random.randrange(less_y, less_y + 16))
+            if t > 32: flag = False
+            t += 1
+        if flag:
+            path = rdm_walk(updated_maze, [orig_coord])
+            previous_coord = orig_coord
+            for coord in path[1:]:
+                updated_maze = connect_cells(updated_maze, previous_coord, coord)
+                previous_coord = coord
+    return updated_maze
+
+
+def gen_empty_chunk(maze, less_x, less_y):
+    for x in range(16):
+        for y in range(16):
+            coords = (x + less_x, y + less_y)
+            if not coords in maze:
+                maze[(x + less_x, y + less_y)] = []
+    return maze
+
+
+def gen_maze_chunck(maze, less_x, less_y):
+    # Fill the chunck
+    updated_maze = maze
+    updated_maze = gen_lines_maze(updated_maze, less_x, less_y)
+    updated_maze = gen_paths_maze(updated_maze, less_x, less_y)
+    return updated_maze
+
+
+def connect_cells(maze, a, b):
+    if a in maze and b in maze:
+        if b not in maze[a]: maze[a].append(b)
+        if a not in maze[b]: maze[b].append(a)
+    return maze
+
+
+def add_chunck_maze(player_x, player_y):
     global maze
-
-    # Calculer les limites actuelles du labyrinthe
-    coords = list(maze.keys())
-    current_min_x = min(x for (x, y) in coords)
-    current_max_x = max(x for (x, y) in coords)
-    current_min_y = min(y for (x, y) in coords)
-    current_max_y = max(y for (x, y) in coords)
-
-    threshold = 10 # Distance pour déclencher l'expansion
-    offset = (0, 0)
-    x, y = int(pos[0] / s.wall_length), int(pos[1] / s.wall_length)
-
-    # Déterminer la direction d'expansion
-    if x >= current_max_x - threshold:
-        offset = (current_max_x + render_distance, current_max_y + render_distance if y > 0 else current_min_y - render_distance)
-    elif x <= current_min_x + threshold:
-        offset = (current_min_x - render_distance, current_max_y + render_distance if y > 0 else current_min_y - render_distance)
-    elif y >= current_max_y - threshold:
-        offset = (current_max_x + render_distance if x > 0 else current_min_x - render_distance, current_max_y + render_distance)
-    elif y <= current_min_y + threshold:
-        offset = (current_max_x + render_distance if x > 0 else current_min_x - render_distance, current_min_y - render_distance)
-    else:
-        return False  # Pas près d'un bord
-
-    # Créer une nouvelle section adjacente
-    temp_maze = {}
-    for i in range(-render_distance, render_distance + 1):
-        for j in range(-render_distance, render_distance + 1):
-            new_x = i + offset[0]
-            new_y = j + offset[1]
-            temp_maze[(new_x, new_y)] = []
-
-    # Fusionner avec le labyrinthe existant
-    original_maze = maze.copy()
-    maze = temp_maze
-    gen_maze(offset[0], offset[1])  # Générer les passages dans la nouvelle section
-    maze.update(original_maze)  # Combiner les deux sections
-
+    threshold = 10
+    flag = True
+    if (player_x + threshold, player_y) not in maze:
+        new_less_x = math.copysign((player_x + threshold >> 4) << 4, player_x - 0.1)
+        new_less_y = math.copysign((player_y >> 4) << 4, player_y - 0.1)
+        flag = False
+    elif (player_x - threshold, player_y) not in maze:
+        new_less_x = math.copysign((player_x - threshold  >> 4) << 4, player_x - 0.1)
+        new_less_y = math.copysign((player_y>> 4) << 4, player_y - 0.1)
+        flag = False
+    if (player_x, player_y + threshold) not in maze:
+        new_less_x = math.copysign((player_x >> 4) << 4, player_x - 0.1)
+        new_less_y = math.copysign((player_y + threshold >> 4) << 4, player_y - 0.1)
+        flag = False
+    elif (player_x, player_y - threshold) not in maze:
+        new_less_x = math.copysign((player_x >> 4) << 4, player_x - 0.1)
+        new_less_y = math.copysign((player_y - threshold >> 4) << 4, player_y - 0.1)
+        flag = False
+    if flag: return False
+    maze = gen_empty_chunk(maze, new_less_x, new_less_y)
+    maze = gen_maze_chunck(maze, new_less_x, new_less_y)
     return True
 
 
-def wall_pos_for_maze():
+def wall_pos_for_maze(maze):
     wall_pos = []
     for coord in maze:
         x, y = coord
@@ -143,18 +151,18 @@ def wall_pos_for_maze():
     return wall_pos
 
 
-def create_maze():
-    walls = wall_pos_for_maze()
+def create_maze(maze):
+    walls = wall_pos_for_maze(maze)
     for pos, orientation in walls:
         # dépendant de la région ??
         model, color, refraction = (s.brickwall_model, s.brickwall_color, s.brickwall_refraction)
-
         s.Wall((pos[0] * s.wall_length, 1, pos[1] * s.wall_length), orientation,
                model, color, refraction, height=5)
 
 
 def gen_campain(campain_stage):
-    if campain_stage == -1:  # Mode test
+    global maze
+    if campain_stage == -1: # Mode test
         # Création des murs
         s.Wall((1, 1, 0), "North", s.white_wall_model, s.white_wall_color, s.white_wall_refraction)
         s.Wall((6, 1, 0), "North", s.brickwall_model, s.brickwall_color, s.brickwall_refraction)
@@ -171,11 +179,12 @@ def gen_campain(campain_stage):
         s.Item((5, 2, 8), s.woodenwall_model, "Block")
         # Séléction de l'arme
         s.gun = s.Gun(s.main_gun_frames, 12, 7, -100, "main")  # arme principale
+        s.gun_hotbar = [True, True]
 
     if campain_stage == 0:  # Mode labyrinthe
         # Création des murs
-        gen_maze(0, 0)
-        create_maze()
+        maze = initialize_maze()
+        create_maze(maze)
         # Séléction de l'arme
         s.gun = s.Gun(s.main_gun_frames, 12, 7, -100, "main")  # arme principale
 
@@ -257,3 +266,4 @@ def gen_campain(campain_stage):
         s.Wall((-27, 3, -30), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=8, length=38)
         # Final Room Ground
         s.Floor((-67, 3, -11), 80, 38, s.woodenwall_model, s.woodenwall_color, s.woodenwall_refraction)
+        

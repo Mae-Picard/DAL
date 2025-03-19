@@ -9,7 +9,7 @@ init_window(1, 1, "1")  # dummy initialisation pour pouvoir détecter l'écran
 device = get_current_monitor()  # device se réfère à l'écran utilisé
 sWidthConst = get_monitor_width(device)  # on en prend la largeur
 sHeightConst = get_monitor_height(device)  # on en prend la hauteur
-sWidth, sHeight = (1000, sHeightConst)  # mettre une taille personnalisée ? - conseillé (1200, 800)
+sWidth, sHeight = (sWidthConst, sHeightConst)  # mettre une taille personnalisée ? - conseillé (1200, 800)
 rW = sWidthConst / sWidth  # des ratios pour ajuster les intéractions
 rH = sHeightConst / sHeight
 init_window(sWidth, sHeight, "Doom Au Louvre")  # initialisation de la fenêtre
@@ -71,6 +71,7 @@ mob_model1 = load_model_from_mesh(gen_mesh_cube(1.25, 1.25, 0.0))
 mob_model2 = load_model_from_mesh(gen_mesh_cube(1.25, 1.5, 0.0))
 mob_model3 = load_model_from_mesh(gen_mesh_cube(1.75, 2.0, 0.0))
 mob_model4 = load_model_from_mesh(gen_mesh_cube(1, 2, 0.0))
+mob_model5 = load_model_from_mesh(gen_mesh_cube(1, 2, 0.0))
 
 painting_north_model1 = load_model_from_mesh(gen_mesh_cube(1.28, 1.7, 0.15))
 painting_north_model2 = load_model_from_mesh(gen_mesh_cube(1.5, 1.25, 0.15))
@@ -96,6 +97,7 @@ mob_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resou
 mob_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon2.png")
 mob_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon3.png")
 mob_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon4.png")
+mob_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon5.png")
 
 painting_north_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting1.png")
 painting_north_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting2.png")
@@ -110,6 +112,7 @@ UI_slot_texture = load_texture("resources/slot_highlight.png")
 UI_crossair_texture = load_texture("resources/crossair.png")
 UI_life_texture = load_texture("resources/life.png")
 UI_bullets_texture = load_texture("resources/bullets.png")
+UI_base_layer_right = load_texture("resources/base_layer_right.png")
 FX_bullet_texture = load_texture("resources/bullet.png")
 FX_shadow_texture = resize_image_to_screen("resources/shadow.png", sWidth, sHeight)
 menu_background = load_texture("resources/menubackground.png")
@@ -133,6 +136,7 @@ main_gun_frames = []
 riffle_gun_frames = []
 for i in [0, 1, 2]: main_gun_frames.append(load_texture(f"resources/{i}.png"))
 for i in [0, 1, 2, 3, 4, 5]: riffle_gun_frames.append(load_texture(f"resources/riffle{i}.png"))
+flashlight_texture = load_texture("resources/flashlight.png")
 # ----------------------------------------------------------------------------------------------------------------------
 # Classes
 # ----------------------------------------------------------------------------------------------------------------------
@@ -171,7 +175,7 @@ class Player:
     def update_movement(self):
         """Gère le déplacement et la gravité du joueur."""
         global friction
-        friction = 1 + 12 / FPS * (get_fps() / FPS) + 0.1
+        friction = 1.1 + 12 / FPS * (get_fps() / FPS) + (-0.125 if player.is_dashing else 0)
         for k, i, m in [(KEY_W, 0, 1), (KEY_S, 0, -1), (KEY_D, 1, 1), (KEY_A, 1, -1)]:
             if is_key_down(k):
                 self.accels[i] = (self.accels[i] + m * speed / 100) / friction
@@ -190,7 +194,7 @@ class Player:
             self.accels[2] = 0
             self.movements[2] = artificial_heigh + self.block_height - camera.position.y
             self.is_in_air = False
-        self.accels[2] /= 1 + (friction - 1) / 3
+        self.accels[2] /= 1 + (friction - 1) / 4
 
     def update(self):
         """Met à jour les entrées clavier et applique les mouvements."""
@@ -237,23 +241,27 @@ class Wall:
         x, y, z = pos
         if random.random() < 0.5: add_painting = True
         else: add_painting = False
-        if orientation == "West":
-            l = [1, height, length]
-            if add_painting:
-                side = random.choice([0, -1])
-                pos = (x + side, y + 1, z + length // 2 - 1)
-                paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3])
-        else:
-            l = [length, height, 1]
-            if add_painting:
-                side = random.choice([0, -1])
-                pos = (x + length // 2 - 1, y + 1, z + side)
-                paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3])
+        if orientation == "West": l = [1, height, length]
+        else: l = [length, height, 1]
 
         for c1 in range(l[0]):
             for c2 in range(l[1]):
                 for c3 in range(l[2]):
-                    Block((x + c1, y + c2, z + c3), model, color, refraction)
+                    p = (x + c1, y + c2, z + c3)
+                    if p in blocks:
+                        add_painting = False
+                        break
+                    Block(p, model, color, refraction)
+
+        if add_painting:
+            if orientation == "West":
+                side = random.choice([0, -1])
+                pos = (x + side, y + 1, z + length // 2 - 1)
+                paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3])
+            else:
+                side = random.choice([0, -1])
+                pos = (x + length // 2 - 1, y + 1, z + side)
+                paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3])
 
 
 class Floor:
@@ -304,7 +312,9 @@ class Mob:
         self.life = life
         self.initial_life = life
         self.speed = speed
-        mobs[pos] = self
+        if len(mobs) < int(mob_strength):
+            mobs[pos] = self
+
 
     def update_movements(self):
         global mobs
@@ -323,9 +333,9 @@ class Mob:
     def move_forwards(self):
         t_yaw = self.yaw + 180 * DEG2RAD
         vx, vz = (math.sin(t_yaw), math.cos(t_yaw))
-        s = math.sqrt(mob_strength) * 0.5
-        self.movements[0] = self.speed * vx / get_fps() * (1 + self.life / self.initial_life) * s
-        self.movements[2] = self.speed * vz / get_fps() * (1 + self.life / self.initial_life) * s
+        s = math.cbrt(mob_strength) * 0.3333
+        self.movements[0] = self.speed * vx / get_fps() * (2 + self.life / self.initial_life) * s
+        self.movements[2] = self.speed * vz / get_fps() * (2 + self.life / self.initial_life) * s
 
 
     def seek_player(self):
@@ -408,6 +418,7 @@ class Gun:
         self.offset = offset
         self.type = type
         self.bullets = 14 if type == "main" else 26
+        self.tick_after_shoot = 0
 
     def switch(self):
         """Passe d'une arme à l'autre."""
@@ -417,11 +428,13 @@ class Gun:
                 gun = Gun(main_gun_frames, 12, 7, -100, "main")
             elif self.type == "main":
                 gun = Gun(riffle_gun_frames, 9, 19, -250, "riffle")
+            gun.tick_after_shoot = 1
 
 
 class Bullet:
     def __init__(self, type, again=1):
         player.target = find_target(player.pos, DEG2RAD * player.yaw, DEG2RAD * player.roll)
+        gun.tick_after_shoot = 1
         self.type = type
         self.tick = 0
         self.again = again
@@ -509,7 +522,6 @@ class Item:
         elif self.type == "Speed": powerups_hotbar[1] = True
         elif self.type == "Damage": powerups_hotbar[2] = True
         else: print("unrecognized type")
-
             
     def update(self):
         x, y, z = self.pos
@@ -519,19 +531,18 @@ class Item:
             i = items[self.pos].index(self)
             del items[self.pos][i]
     
-        elif y > 3/get_fps() + 1 and (x, round(y - 1), z) not in blocks:
+        elif y > 1 + 3/(get_fps() + 1) and (x, round(y - 1), z) not in blocks:
             del items[self.pos]
-            new_pos = (x, y - 3/get_fps(), z)
+            new_pos = (x, y - 3/(get_fps() + 1), z)
             self.pos = new_pos
             if new_pos in items:
                 items[new_pos].append(self)
             else:
                 items[new_pos] = [self]
 
-
     def draw_item(self):
         self.update()
-        self.tick += 1/get_fps()
+        self.tick += 1/(get_fps() + 1)
         if self.tick > 3.141592653589 * 2.0: self.tick = 0.0
         pos = (self.pos[0], self.pos[1] + math.sin(self.tick) / 20, self.pos[2])
         draw_custom(pos, self.model, self.color, self.refraction, (0, 1, 0), self.tick, 0.4)
@@ -543,12 +554,11 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
     x, y, z = player.pos
     x1, y1, z1 = pos
     vx, vy, vz = player.v
-
     c = (distance_of_view >> 1) - 2
-
-    x2, y2, z2 = x1 - x - 6 * vx, y1 - y - 6 * vy, z1 - z - 6 * vz
+    c2 = min(c, 6)
+    x2, y2, z2 = x1 - x - c2 * vx, y1 - y - (c2 / 2) * vy - 1 / (gun.tick_after_shoot // 6 + 0.75) + 0.5, z1 - z - c2 * vz
     d2 = math.sqrt(x2 ** 2 + 4 * y2 ** 2 + z2 ** 2)
-    if d2 < c + 5:
+    if d2 < c + 9 - c2:
         x3, y3, z3 = x1 - x - 2.5 * vx, y1 - y - vy, z1 - z - 2.5 * vz
         d3 = x3 ** 2 + 2 * y3 ** 2 + z3 ** 2
         if d3 < 9: d2 *= d3 / 9
@@ -563,8 +573,7 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
                     min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.85))),
                     min(255, int(max(bc3 * b, c3 - t ** 1.06 * 0.9))), 255))
         return True # l'objet a été dessiné
-    else:
-        return False # l'objet n'a pas été dessiné
+    else: return False # l'objet n'a pas été dessiné
 
 
 def build_map():
@@ -650,15 +659,15 @@ player = Player()
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialisation du monde et des dictionnaires
 # ----------------------------------------------------------------------------------------------------------------------
-blocks = {}  # Dictionnaire des blocs
-mobs = {}  # Dictionnaire des ennemis
+blocks = {} # Dictionnaire des blocs
+mobs = {} # Dictionnaire des ennemis
 mob_sizes = [] # Liste des tailles des monstres du jeu pour leur hitbox
-paintings = {}  # Dictionnaire des tableaux
+paintings = {} # Dictionnaire des tableaux
 items = {} # Dictionnaire des items présents en jeu
-bullets = []  # Liste éphémère des balles vides
-wall_length = 4  # Longueur des murs
-wall_height = 4  # Hauteur des murs
-gun = Gun(main_gun_frames, 12, 7, -100, "main")  # Initialisation de larmes sinon ca marche pas je pleure des LARMES
+bullets = [] # Liste éphémère des balles vides
+wall_length = 4 # Longueur des murs
+wall_height = 4 # Hauteur des murs
+gun = Gun(main_gun_frames, 12, 7, -100, "main") # Initialisation de larmes sinon ca marche pas je pleure des LARMES
 gun_hotbar = [False, True] # Etat par défaut des armes
 pickable_hotbar = [0, 0] # Etat par défaut du nombres de blocs et monstres collectés
 powerups_hotbar = [False, False, False] # Etat par défaut des PowerUps
