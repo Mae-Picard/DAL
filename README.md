@@ -9,8 +9,8 @@
 ---
 ***Installation***
 ---
-	git clone https://github.com/yourusername/doom-au-louvre.git
-	cd doom-au-louvre
+	git clone https://github.com/lygzounette/DAL.git
+	cd DAL
 	pip install -r requirements.txt
 	python main.py
  
