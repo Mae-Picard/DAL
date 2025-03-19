@@ -57,7 +57,7 @@ A retro-styled *FPS* where art meets demons in the world's most famous museum!
 
 ***Team***
 
-	Maé Picard: Lead Programmer & Game Design
+	Maé Picard: Lead Programmer & Game Design & README
 	Nolan Guthinger: Pixel Artist & Level Designer
 	Nathan Bruyère: Systems Programmer & Technical Writer
 
@@ -96,7 +96,7 @@ Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du
  
 - ⌨️ **Contrôles**
 
-| Action | Key |
+| Action | Touche |
 |----------|----------|
 | Déplacement | ZQSD     |
 | Course      | Ctrl     |
@@ -109,7 +109,7 @@ Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du
 
 ***Équipe***
 
-	Maé Picard: Développeur Principal & Game Design
+	Maé Picard: Développeur Principal & Game Design & README
 	Nolan Guthinger: Artiste Pixel & Level Designer
 	Nathan Bruyère: Développeur & Rédaction Technique
 ---
@@ -118,14 +118,14 @@ Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du
 # Our Best Piece of Code.
 
 This piece of code is used **everytime** the game renders (*60 times per second*).
-> to draw any object on the screen with the same laws :
+> It has to draw any object on the screen with the **same laws** :
 > - based how far away the **player's flashlight's light** is, we darken it or lighten it
 > - if it is too **far**, it isn't rendered (*lost in the darkness*)
 > - if it has to be rotated, it will be
 > - it's colors will be modified to give a more *natural-retro-bad-camera-look*
-> The brightness is based on **two points** in front of the player,
-> a *farther one* and a *nearer one*, the are used to make a good **flashlight effect**
-> which's brightness is *consistant, dynamic and realistic*.
+The brightness is based on **two points** in front of the player,
+a *farther one* and a *nearer one*, they are used to make a good **flashlight effect**
+which's brightness is *consistant, dynamic and realistic*.
 
  ```python
 def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 1):
