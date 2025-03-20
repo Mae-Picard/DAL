@@ -24,9 +24,11 @@ Anglais / English
 A retro-styled *FPS* where art meets demons in the world's most famous museum!
 
 ***🎮 Description***
-	*Doom Au Louvre (DAL)* is a *Python-powered* first-person shooter combining rogue-like elements with *classic Doom-inspired mechanics*. Battle demonic forces through either infinite procedurally generated mazes or hand-crafted levels, all set within a *pixel-art* reimagining of the Louvre Museum.
+
+*Doom Au Louvre (DAL)* is a *Python-powered* first-person shooter combining rogue-like elements with *classic Doom-inspired mechanics*. Battle demonic forces through either infinite procedurally generated mazes or hand-crafted levels, all set within a *pixel-art* reimagining of the Louvre Museum.
 
 ***✨ Features***
+
 ***Gameplay***
 >	- **Two Modes**: Endless procedural maze OR designed campaign levels
 >	- **Dynamic Combat**: 2 unique weapons with alt-fire modes (scope & integrated flashlight)
@@ -76,9 +78,11 @@ Français / French
 Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du monde !
 
 ***🎮 Description***
-	*Doom Au Louvre* (DAL) est un jeu de tir en *Python* combinant des éléments roguelike avec des mécaniques inspirées du classique *Doom premier du nom*. Affrontez des forces démoniaques dans des labyrinthes générés procéduralement ou des niveaux conçus à la main et avec amour, le tout dans une réinterprétation *pixel-art* du Louvre.
+
+*Doom Au Louvre* (DAL) est un jeu de tir en *Python* combinant des éléments roguelike avec des mécaniques inspirées du classique *Doom premier du nom*. Affrontez des forces démoniaques dans des labyrinthes générés procéduralement ou des niveaux conçus à la main et avec amour, le tout dans une réinterprétation *pixel-art* du Louvre.
 
 ***✨ Fonctionnalités***
+
 ***Gameplay***
 >	- **Deux Modes**: Labyrinthe infini généré OU niveaux conçus
 >	- **Armes Dynamiques**: 2 armes uniques avec modes secondaires (visée & lampe torche)
