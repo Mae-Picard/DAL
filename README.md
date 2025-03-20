@@ -53,7 +53,8 @@ A retro-styled *FPS* where art meets demons in the world's most famous museum!
 | Jump      | Space     |
 | Fire      | Left Click     |
 | Scope      | Right Click     |
-| Weapon Switch      | A     |
+| Weapon Switch      | Q     |
+| Use PowerUps      | E     |
 
 ***Team***
 
@@ -105,7 +106,7 @@ Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du
 | Tir      | Clic Gauche     |
 | Visée      | Clic Droit     |
 | Changement Arme      | A     |
-
+| Utiliser Bonus      | E     |
 
 ***Équipe***
 
