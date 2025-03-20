@@ -9,7 +9,7 @@ init_window(1, 1, "1")  # dummy initialisation pour pouvoir détecter l'écran
 device = get_current_monitor()  # device se réfère à l'écran utilisé
 sWidthConst = get_monitor_width(device)  # on en prend la largeur
 sHeightConst = get_monitor_height(device)  # on en prend la hauteur
-sWidth, sHeight = (sWidthConst, sHeightConst)  # mettre une taille personnalisée ? - conseillé (1200, 800)
+sWidth, sHeight = (sWidthConst, sHeightConst)  # mettre une taille personnalisée ? - conseillée (1200, 800)
 rW = sWidthConst / sWidth  # des ratios pour ajuster les intéractions
 rH = sHeightConst / sHeight
 init_window(sWidth, sHeight, "Doom Au Louvre")  # initialisation de la fenêtre
@@ -25,7 +25,7 @@ speed = 1.25  # vitesse du joueur
 artificial_heigh = 2  # taille du joueur (en blocks)
 distance_of_view = campain.render_distance  # = 20, les objets a plus de 20 blocks de distance disparaissent
 range_view = range(-distance_of_view + 2, distance_of_view - 1)  # Liste de nombres
-FoV = 120  # grand FoV (Field of View = Champ de Vision) pour une impression de grandeur de l'espace
+FoV = 90  # grand FoV (Field of View = Champ de Vision) pour une impression de grandeur de l'espace
 y_player_offset = 0  # Déplacement vertical artificiel (pas, recul..)
 mob_strength = 1.0 # Coefficient multiplicateur de la force des monstres
 # ----------------------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ item_color = (205, 202, 210, 200)
 # Indices de réfraction des surfaces
 floor_refraction = .8
 brickwall_refraction = .95
-red_wall_refraction = .95
+red_wall_refraction = .85
 woodenwall_refraction = 1
 white_wall_refraction = 0.8
 mob_refraction = 1.05
@@ -110,6 +110,7 @@ UI_hotbar_texture = load_texture("resources/hotbar.png")
 UI_indicators_texture = load_texture("resources/indicators.png")
 UI_slot_texture = load_texture("resources/slot_highlight.png")
 UI_crossair_texture = load_texture("resources/crossair.png")
+UI_scope_crossair_texture = load_texture("resources/scope_crossair.png")
 UI_life_texture = load_texture("resources/life.png")
 UI_bullets_texture = load_texture("resources/bullets.png")
 UI_base_layer_right = load_texture("resources/base_layer_right.png")
@@ -157,6 +158,7 @@ class Player:
         self.life = 26  # Vies du joueur
         self.shield = get_fps()  # Bouclier du joueur (durée)
         self.speed = 1.0 # Coefficient de vitesse
+        self.resistance = 1.0 # Coefficient de resistance
 
     def is_colliding(self):
         """Vérifie si le joueur est en collision avec un bloc."""
@@ -196,6 +198,7 @@ class Player:
             self.is_in_air = False
         self.accels[2] /= 1 + (friction - 1) / 4
 
+
     def update(self):
         """Met à jour les entrées clavier et applique les mouvements."""
         self.update_movement()
@@ -205,9 +208,11 @@ class Player:
         if self.roll > 185: self.roll = 185
         if self.roll < 5: self.roll = 5
         self.v = (math.sin(self.yaw * DEG2RAD), math.cos(self.roll * DEG2RAD), -math.cos(self.yaw * DEG2RAD))
+        camera.fovy += zoom * 70
+        camera.fovy = min(160, max(60, camera.fovy))
         # gère les hitboxes et la mise à jour de la caméra
         z, x, y = self.movements
-        update_camera_pro(camera, (0, 0, 0), (get_mouse_delta().x * 0.45 * rW, get_mouse_delta().y * 0.45 * rH, 0), 0)
+        update_camera_pro(camera, (0, 0, 0), (get_mouse_delta().x * 0.45 * rW, get_mouse_delta().y * 0.45 * rH, 0), zoom / 4)
         update_camera_pro(camera, (z * self.speed, 0, 0), (0, 0, 0), 0)
         if self.is_colliding():
             update_camera_pro(camera, (-z * self.speed, 0, 0), (0, 0, 0), 0)
@@ -232,7 +237,7 @@ class Player:
         if self.life <= 0:
             campain.in_menu = True
             campain.in_world = False
-        self.life -= dmg
+        self.life -= dmg / self.resistance
 
 
 class Wall:
@@ -248,11 +253,13 @@ class Wall:
             for c2 in range(l[1]):
                 for c3 in range(l[2]):
                     p = (x + c1, y + c2, z + c3)
-                    if p in blocks:
-                        add_painting = False
-                        break
+                    if campain.campain_stage == 0:
+                        if p in blocks:
+                            add_painting = False
+                            break
                     Block(p, model, color, refraction)
-
+        
+        if campain.campain_stage >= 1: add_painting = False
         if add_painting:
             if orientation == "West":
                 side = random.choice([0, -1])
@@ -312,7 +319,7 @@ class Mob:
         self.life = life
         self.initial_life = life
         self.speed = speed
-        if len(mobs) < int(mob_strength):
+        if campain.stage == 0 and len(mobs) < int(10 * mob_strength):
             mobs[pos] = self
 
 
@@ -333,9 +340,9 @@ class Mob:
     def move_forwards(self):
         t_yaw = self.yaw + 180 * DEG2RAD
         vx, vz = (math.sin(t_yaw), math.cos(t_yaw))
-        s = math.cbrt(mob_strength) * 0.3333
-        self.movements[0] = self.speed * vx / get_fps() * (2 + self.life / self.initial_life) * s
-        self.movements[2] = self.speed * vz / get_fps() * (2 + self.life / self.initial_life) * s
+        s = mob_strength ** (1/3) * 0.3333
+        self.movements[0] = self.speed * vx / (get_fps()+1) * (2 + self.life / self.initial_life) * s
+        self.movements[2] = self.speed * vz / (get_fps()+1) * (2 + self.life / self.initial_life) * s
 
 
     def seek_player(self):
@@ -655,6 +662,7 @@ camera.up = (0.0, 1.0, 0.0)
 camera.fovy = FoV
 camera.projection = CameraProjection.CAMERA_PERSPECTIVE
 cameraMode = CameraMode.CAMERA_CUSTOM
+zoom = .2 # Variable active qui reste à 0 si aucun zoom n'est appliqué ou varie de -1 à 1 suivant l'intensité
 player = Player()
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialisation du monde et des dictionnaires
