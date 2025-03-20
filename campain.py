@@ -1,5 +1,5 @@
 render_distance = 16
-campain_stage = 1
+campain_stage = 0
 maze = {}
 
 import setup as s
@@ -10,6 +10,7 @@ import pyray as pr
 in_menu = False
 in_world = True
 switching_stage = True
+first_time = True
 
 
 def initialize_maze():
@@ -43,9 +44,9 @@ def gen_lines_maze(maze, less_x, less_y):
             ox, oy = orig_coord
             for i in range(1, 9):
                 next_cell = (ox + dx * i, oy + dy * i)
-                if next_cell not in updated_maze: break # Stop if out of bounds
+                if next_cell not in updated_maze: break  # Stop if out of bounds
                 updated_maze = connect_cells(updated_maze, previous_cell, next_cell)
-                if len(updated_maze[next_cell]) > 0: break # Stop if cell is already connected
+                if len(updated_maze[next_cell]) > 0: break  # Stop if cell is already connected
                 previous_cell = next_cell
     return updated_maze
 
@@ -53,12 +54,14 @@ def gen_lines_maze(maze, less_x, less_y):
 def rdm_walk(maze, path):
     if len(maze[path[-1]]) > 0: return path
     x, y = path[-1]
-    p = path.copy() # Use a copy to avoid unintended mutations
+    p = path.copy()  # Use a copy to avoid unintended mutations
     dx, dy = random.choice([(0, 1), (-1, 0), (1, 0), (0, -1)])
     new_pos = (x + dx, y + dy)
     if new_pos in maze:
-        if new_pos not in path: p.append(new_pos)
-        else: p = path[:path.index(new_pos) + 1] # Truncate the path to form a loop
+        if new_pos not in path:
+            p.append(new_pos)
+        else:
+            p = path[:path.index(new_pos) + 1]  # Truncate the path to form a loop
     return rdm_walk(maze, p)
 
 
@@ -112,20 +115,20 @@ def add_chunck_maze(player_x, player_y):
     threshold = 10
     flag = True
     if (player_x + threshold, player_y) not in maze:
-        new_less_x = math.copysign((player_x + threshold >> 4) << 4, player_x - 0.1)
-        new_less_y = math.copysign((player_y >> 4) << 4, player_y - 0.1)
+        new_less_x = (player_x + threshold >> 4) << 4
+        new_less_y = (player_y >> 4) << 4
         flag = False
     elif (player_x - threshold, player_y) not in maze:
-        new_less_x = math.copysign((player_x - threshold  >> 4) << 4, player_x - 0.1)
-        new_less_y = math.copysign((player_y>> 4) << 4, player_y - 0.1)
+        new_less_x = (player_x - threshold >> 4) << 4
+        new_less_y = (player_y >> 4) << 4
         flag = False
     if (player_x, player_y + threshold) not in maze:
-        new_less_x = math.copysign((player_x >> 4) << 4, player_x - 0.1)
-        new_less_y = math.copysign((player_y + threshold >> 4) << 4, player_y - 0.1)
+        new_less_x = (player_x >> 4) << 4
+        new_less_y = (player_y + threshold >> 4) << 4
         flag = False
     elif (player_x, player_y - threshold) not in maze:
-        new_less_x = math.copysign((player_x >> 4) << 4, player_x - 0.1)
-        new_less_y = math.copysign((player_y - threshold >> 4) << 4, player_y - 0.1)
+        new_less_x = (player_x >> 4) << 4
+        new_less_y = (player_y - threshold >> 4) << 4
         flag = False
     if flag: return False
     maze = gen_empty_chunk(maze, new_less_x, new_less_y)
@@ -162,7 +165,7 @@ def create_maze(maze):
 
 def gen_campain(campain_stage):
     global maze
-    if campain_stage == -1: # Mode test
+    if campain_stage == -1:  # Mode test
         # Création des murs
         s.Wall((1, 1, 0), "North", s.white_wall_model, s.white_wall_color, s.white_wall_refraction)
         s.Wall((6, 1, 0), "North", s.brickwall_model, s.brickwall_color, s.brickwall_refraction)
@@ -266,8 +269,8 @@ def gen_campain(campain_stage):
         s.Wall((-27, 3, -30), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=8, length=38)
         # Final Room Ground
         s.Floor((-67, 3, -11), 80, 38, s.woodenwall_model, s.woodenwall_color, s.woodenwall_refraction)
-        
-        # Maze 1st Room 
+
+        # Maze 1st Room
         s.Wall((-8, 1, -8), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
         s.Wall((-8, 1, -2), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=4)
         s.Wall((-5, 1, 0), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=8)
@@ -284,7 +287,7 @@ def gen_campain(campain_stage):
         s.Wall((-6, 1, 3), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
         s.Wall((5, 1, -4), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
         s.Wall((6, 1, -1), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
-        
+
         # Maze 2nd Room
         s.Wall((-30, 1, 24), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         s.Wall((-25, 1, 26), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
@@ -300,7 +303,7 @@ def gen_campain(campain_stage):
         s.Wall((-5, 1, 21), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
         s.Wall((-15, 1, 28), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=7)
         s.Wall((-28, 1, 22), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
-        
+
         # Maze 3rd Room
         s.Wall((-58, 1, 45), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         s.Wall((-55, 1, 48), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
@@ -310,7 +313,7 @@ def gen_campain(campain_stage):
         s.Wall((-52, 1, 62), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
         s.Wall((-55, 1, 70), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
         s.Wall((-47, 1, 66), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
-        s.Wall((-45, 1, 72), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5) 
+        s.Wall((-45, 1, 72), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
         s.Wall((-58, 1, 40), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=1, length=4)
         s.Wall((-58, 1, 34), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=3, length=4)
         s.Wall((-55, 1, 38), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
@@ -325,7 +328,7 @@ def gen_campain(campain_stage):
         s.Wall((-55, 1, 40), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=6)
         s.Wall((-47, 1, 36), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
         s.Wall((-45, 1, 42), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=5)
-        
+
         # Maze 4th Room
         s.Wall((-100, 1, 35), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=15)
         s.Wall((-93, 1, 38), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
@@ -351,7 +354,7 @@ def gen_campain(campain_stage):
         s.Wall((-75, 1, 22), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=2, length=10)
         s.Wall((-95, 1, 22), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=2, length=10)
         s.Wall((-68, 1, 25), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=2, length=10)
-        
+
         # Maze Final Room
         s.Wall((-100, 4, -25), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=25)
         s.Wall((-75, 4, -15), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
@@ -369,7 +372,7 @@ def gen_campain(campain_stage):
         s.Wall((-15, 4, -5), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=12)
         s.Wall((-60, 4, -18), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         s.Wall((-40, 4, -22), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
-        
+
         s.Wall((-50, 4, -25), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=25)
         s.Wall((-25, 4, -15), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         s.Wall((-35, 4, -5), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=20)
@@ -440,7 +443,7 @@ def gen_campain(campain_stage):
         s.Mob((-88, 2, 39), s.mob_model5, 4, 8, 2)
         s.Mob((-96, 2, 25), s.mob_model5, 4, 8, 2)
         s.Mob((-106, 2, 26), s.mob_model5, 4, 8, 2)
-        
+
         # Mobs Final Room
         s.Mob((-88, 5, -8), s.mob_model1, 3, 4, 3)
         s.Mob((-104, 5, 1), s.mob_model2, 4, 8, 4)

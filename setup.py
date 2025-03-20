@@ -27,7 +27,9 @@ distance_of_view = campain.render_distance  # = 20, les objets a plus de 20 bloc
 range_view = range(-distance_of_view + 2, distance_of_view - 1)  # Liste de nombres
 FoV = 90  # grand FoV (Field of View = Champ de Vision) pour une impression de grandeur de l'espace
 y_player_offset = 0  # Déplacement vertical artificiel (pas, recul..)
-mob_strength = 1.0 # Coefficient multiplicateur de la force des monstres
+mob_strength = 1.0  # Coefficient multiplicateur de la force des monstres
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialisation des ressources graphiques
 # ----------------------------------------------------------------------------------------------------------------------
@@ -36,6 +38,7 @@ def resize_image_to_screen(image_path, screen_width, screen_height):
     image_resize(img, screen_width, screen_height)
     texture = load_texture_from_image(img)
     return texture
+
 
 # Définition des couleurs utilisées dans le jeu (RGBA)
 floor_color = (225, 220, 200, 255)
@@ -138,6 +141,8 @@ riffle_gun_frames = []
 for i in [0, 1, 2]: main_gun_frames.append(load_texture(f"resources/{i}.png"))
 for i in [0, 1, 2, 3, 4, 5]: riffle_gun_frames.append(load_texture(f"resources/riffle{i}.png"))
 flashlight_texture = load_texture("resources/flashlight.png")
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Classes
 # ----------------------------------------------------------------------------------------------------------------------
@@ -157,8 +162,8 @@ class Player:
         self.target = (0, 0, 0)  # Position que le joueur regarde
         self.life = 26  # Vies du joueur
         self.shield = get_fps()  # Bouclier du joueur (durée)
-        self.speed = 1.0 # Coefficient de vitesse
-        self.resistance = 1.0 # Coefficient de resistance
+        self.speed = 1.0  # Coefficient de vitesse
+        self.resistance = 1.0  # Coefficient de resistance
 
     def is_colliding(self):
         """Vérifie si le joueur est en collision avec un bloc."""
@@ -198,7 +203,6 @@ class Player:
             self.is_in_air = False
         self.accels[2] /= 1 + (friction - 1) / 4
 
-
     def update(self):
         """Met à jour les entrées clavier et applique les mouvements."""
         self.update_movement()
@@ -212,7 +216,8 @@ class Player:
         camera.fovy = min(160, max(60, camera.fovy))
         # gère les hitboxes et la mise à jour de la caméra
         z, x, y = self.movements
-        update_camera_pro(camera, (0, 0, 0), (get_mouse_delta().x * 0.45 * rW, get_mouse_delta().y * 0.45 * rH, 0), zoom / 4)
+        update_camera_pro(camera, (0, 0, 0), (get_mouse_delta().x * 0.45 * rW, get_mouse_delta().y * 0.45 * rH, 0),
+                          zoom / 4)
         update_camera_pro(camera, (z * self.speed, 0, 0), (0, 0, 0), 0)
         if self.is_colliding():
             update_camera_pro(camera, (-z * self.speed, 0, 0), (0, 0, 0), 0)
@@ -231,7 +236,6 @@ class Player:
             update_camera_pro(camera, (0, 0, -y - y_player_offset / 2), (0, 0, 0), 0)
         self.pos = [camera.position.x, camera.position.y, camera.position.z]
 
-
     def damage(self, dmg):
         global campain
         if self.life <= 0:
@@ -241,34 +245,45 @@ class Player:
 
 
 class Wall:
-    def __init__(self, pos, orientation, model, color, refraction, height=3, length=5):
+    def __init__(self, pos, orientation, model, color, refraction, height=5, length=5):
         """Construit un mur (en blocs) à une position donnée."""
         x, y, z = pos
-        if random.random() < 0.5: add_painting = True
-        else: add_painting = False
-        if orientation == "West": l = [1, height, length]
-        else: l = [length, height, 1]
+        flag = True
+        if campain.campain_stage == 0:
+            xp, yp, zp = player.pos
+            if abs(x - xp) > 32 * wall_length or abs(z - zp) > 32 * wall_length:
+                flag = False
+        if flag:
+            if random.random() < 0.5: add_painting = True
+            else: add_painting = False
+            if orientation == "West": l = [1, height, length]
+            else: l = [length, height, 1]
 
-        for c1 in range(l[0]):
-            for c2 in range(l[1]):
-                for c3 in range(l[2]):
-                    p = (x + c1, y + c2, z + c3)
-                    if campain.campain_stage == 0:
-                        if p in blocks:
-                            add_painting = False
-                            break
-                    Block(p, model, color, refraction)
-        
-        if campain.campain_stage >= 1: add_painting = False
-        if add_painting:
-            if orientation == "West":
-                side = random.choice([0, -1])
-                pos = (x + side, y + 1, z + length // 2 - 1)
-                paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3])
-            else:
-                side = random.choice([0, -1])
-                pos = (x + length // 2 - 1, y + 1, z + side)
-                paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3])
+            block_list = []
+
+            for c1 in range(l[0]):
+                for c2 in range(l[1]):
+                    for c3 in range(l[2]):
+                        p = (x + c1, y + c2, z + c3)
+                        if campain.campain_stage == 0:
+                            if p in blocks:
+                                add_painting = False
+                                block_list = []
+                                break
+                            block_list.append(p)
+            for p in block_list:
+                Block(p, model, color, refraction)
+
+            if campain.campain_stage >= 1: add_painting = False
+            if add_painting:
+                if orientation == "West":
+                    side = random.choice([0, -1])
+                    pos = (x + side, y + 1, z + length // 2 - 1)
+                    paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3])
+                else:
+                    side = random.choice([0, -1])
+                    pos = (x + length // 2 - 1, y + 1, z + side)
+                    paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3])
 
 
 class Floor:
@@ -319,9 +334,8 @@ class Mob:
         self.life = life
         self.initial_life = life
         self.speed = speed
-        if campain.stage == 0 and len(mobs) < int(10 * mob_strength):
+        if campain.campain_stage == 0 and len(mobs) < int(10 * mob_strength):
             mobs[pos] = self
-
 
     def update_movements(self):
         global mobs
@@ -334,16 +348,15 @@ class Mob:
         if int_pos not in mobs:
             self.pos = tuple(new_pos)
             mobs[int_pos] = self
-        else: mobs[temp_pos] = self
-
+        else:
+            mobs[temp_pos] = self
 
     def move_forwards(self):
         t_yaw = self.yaw + 180 * DEG2RAD
         vx, vz = (math.sin(t_yaw), math.cos(t_yaw))
-        s = mob_strength ** (1/3) * 0.3333
-        self.movements[0] = self.speed * vx / (get_fps()+1) * (2 + self.life / self.initial_life) * s
-        self.movements[2] = self.speed * vz / (get_fps()+1) * (2 + self.life / self.initial_life) * s
-
+        s = mob_strength ** (1 / 3) * 0.3333
+        self.movements[0] = self.speed * vx / (get_fps() + 1) * (2 + self.life / self.initial_life) * s
+        self.movements[2] = self.speed * vz / (get_fps() + 1) * (2 + self.life / self.initial_life) * s
 
     def seek_player(self):
         x, y, z = self.pos
@@ -356,20 +369,21 @@ class Mob:
             subintrpos = (round(rx), round(py - 1), round(rz))
             if intrpos in blocks or subintrpos in blocks:
                 return False
-            if intrpos == (round(px), round(py), round(pz)) or\
-                intrpos == (round(px + 0.3), round(py), round(pz + 0.3)) or\
-                intrpos == (round(px - 0.3), round(py), round(pz - 0.3)):
-                if (x - px)**2 + (y - py)**2 + (z - pz)**2 > 0.5:
+            if intrpos == (round(px), round(py), round(pz)) or \
+                    intrpos == (round(px + 0.3), round(py), round(pz + 0.3)) or \
+                    intrpos == (round(px - 0.3), round(py), round(pz - 0.3)):
+                if (x - px) ** 2 + (y - py) ** 2 + (z - pz) ** 2 > 0.5:
                     return True
-                else: return False
+                else:
+                    return False
         return False
 
-
     def update(self):
-        if self.seek_player(): self.move_forwards()
-        else: self.movements = [0, 0, 0]
+        if self.seek_player():
+            self.move_forwards()
+        else:
+            self.movements = [0, 0, 0]
         self.update_movements()
-
 
     def draw_mob(self):
         """Affiche l'ennemi à l'écran en fonction de la position de la caméra."""
@@ -380,15 +394,14 @@ class Mob:
         self.yaw = vector2_angle((dx, dz), (1, 1)) + 0.75
 
         if draw_custom(self.pos, self.model, self.color, self.refraction, (0, 1, 0), self.yaw):
-            if player.shield == 0 and (x - x1)**2 + (y - y1)**2 + (z - z1)**2 < 0.6:
+            if player.shield == 0 and (x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2 < 0.6:
                 player.life -= self.dmg * mob_strength ** 2
                 player.shield = get_fps() // 2
             draw_shadow_entity(self.pos, 1)
 
-
     def damage(self):
         """Gère les dégats infligés au monstre."""
-        x , y, z = self.pos
+        x, y, z = self.pos
         if self.life <= 0:
             # Drop d'un item aléatoire
             if random.choice([0, 1, 2, 3, 4, 5, 6]) != 0:
@@ -398,16 +411,16 @@ class Mob:
                     model, tag = random.choice([(powerup_health_model, "Health"),
                                                 (powerup_speed_model, "Speed"),
                                                 (powerup_damage_model, "Damage")])
-                    Item((self.pos), model, tag) # PowerUps
+                    Item((self.pos), model, tag)  # PowerUps
                 else:
                     Item((self.pos), riffle_gun_2d_model, "Riffle")
             else:
                 model, tag = random.choice([(powerup_health_model, "Health"),
                                             (powerup_speed_model, "Speed"),
                                             (powerup_damage_model, "Damage")])
-                Item((self.pos), model, tag) # PowerUps
+                Item((self.pos), model, tag)  # PowerUps
             del mobs[round(x), round(y), round(z)]
-            
+
         self.life -= gun.dmg / 8 * (1 + 3 * math.sqrt(mob_strength)) / mob_strength
         c1, c2, c3, a = self.color
         self.color = (min(150 + 10 * self.life, c1),
@@ -447,7 +460,7 @@ class Bullet:
         self.again = again
         self.c = random.random()  # Constante aléatoire par balle
         self.playerpos = (player.pos[0] + player.movements[0],  # Position du joueur au moment du tire
-            player.pos[1] + player.movements[1], player.pos[2] + player.movements[2])
+                          player.pos[1] + player.movements[1], player.pos[2] + player.movements[2])
         # Vecteur de vision du joueur au moment du tire
         self.playerv = (player.v[0], player.v[1] + 0.02, player.v[2])  # 0.02 > 0.0174... = pi/180
         light_ray_model.transform = matrix_rotate_xyz((DEG2RAD * player.roll, 0, DEG2RAD * player.yaw))
@@ -522,14 +535,21 @@ class Item:
 
     def pickup(self):
         global gun_hotbar, pickable_hotbar
-        if self.type == "Block": pickable_hotbar[0] += 1
-        elif self.type == "Mob": pickable_hotbar[1] += 1
-        elif self.type == "Riffle": gun_hotbar[0] = True
-        elif self.type == "Health": powerups_hotbar[0] = True
-        elif self.type == "Speed": powerups_hotbar[1] = True
-        elif self.type == "Damage": powerups_hotbar[2] = True
-        else: print("unrecognized type")
-            
+        if self.type == "Block":
+            pickable_hotbar[0] += 1
+        elif self.type == "Mob":
+            pickable_hotbar[1] += 1
+        elif self.type == "Riffle":
+            gun_hotbar[0] = True
+        elif self.type == "Health":
+            powerups_hotbar[0] = True
+        elif self.type == "Speed":
+            powerups_hotbar[1] = True
+        elif self.type == "Damage":
+            powerups_hotbar[2] = True
+        else:
+            print("unrecognized type")
+
     def update(self):
         x, y, z = self.pos
         x1, y1, z1 = player.pos
@@ -537,10 +557,10 @@ class Item:
             self.pickup()
             i = items[self.pos].index(self)
             del items[self.pos][i]
-    
-        elif y > 1 + 3/(get_fps() + 1) and (x, round(y - 1), z) not in blocks:
+
+        elif y > 1 + 3 / (get_fps() + 1) and (x, round(y - 1), z) not in blocks:
             del items[self.pos]
-            new_pos = (x, y - 3/(get_fps() + 1), z)
+            new_pos = (x, y - 3 / (get_fps() + 1), z)
             self.pos = new_pos
             if new_pos in items:
                 items[new_pos].append(self)
@@ -549,21 +569,24 @@ class Item:
 
     def draw_item(self):
         self.update()
-        self.tick += 1/(get_fps() + 1)
+        self.tick += 1 / (get_fps() + 1)
         if self.tick > 3.141592653589 * 2.0: self.tick = 0.0
         pos = (self.pos[0], self.pos[1] + math.sin(self.tick) / 20, self.pos[2])
         draw_custom(pos, self.model, self.color, self.refraction, (0, 1, 0), self.tick, 0.4)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Fonctions utilitaires
 # ----------------------------------------------------------------------------------------------------------------------
-def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 1):
+def draw_custom(pos, model, color, r, axis=(0, 0, 0), rotation_r=0, scale=1):
     """Dessine un objet en tenant compte de la distance à la caméra."""
     x, y, z = player.pos
     x1, y1, z1 = pos
     vx, vy, vz = player.v
     c = (distance_of_view >> 1) - 2
     c2 = min(c, 6)
-    x2, y2, z2 = x1 - x - c2 * vx, y1 - y - (c2 / 2) * vy - 1 / (gun.tick_after_shoot // 6 + 0.75) + 0.5, z1 - z - c2 * vz
+    x2, y2, z2 = x1 - x - c2 * vx, y1 - y - (c2 / 2) * vy - 1 / (
+                gun.tick_after_shoot // 6 + 0.75) + 0.5, z1 - z - c2 * vz
     d2 = math.sqrt(x2 ** 2 + 4 * y2 ** 2 + z2 ** 2)
     if d2 < c + 9 - c2:
         x3, y3, z3 = x1 - x - 2.5 * vx, y1 - y - vy, z1 - z - 2.5 * vz
@@ -579,8 +602,9 @@ def draw_custom(pos, model, color, r, axis = (0, 0, 0), rotation_r = 0, scale = 
                    (min(255, int(max(bc1 * b, c1 - t ** 1.05 * 0.8))),
                     min(255, int(max(bc2 * b, c2 - t ** 1.04 * 0.85))),
                     min(255, int(max(bc3 * b, c3 - t ** 1.06 * 0.9))), 255))
-        return True # l'objet a été dessiné
-    else: return False # l'objet n'a pas été dessiné
+        return True  # l'objet a été dessiné
+    else:
+        return False  # l'objet n'a pas été dessiné
 
 
 def build_map():
@@ -594,28 +618,28 @@ def build_map():
         x1, y1, z1 = pos
         if abs(x - x1) < distance_of_view and \
                 abs(y - y1) < distance_of_view and \
-                abs(z - z1) < distance_of_view: # Si l'objet est suffisemment proche du joueur
+                abs(z - z1) < distance_of_view:  # Si l'objet est suffisemment proche du joueur
             b = blocks[pos]
             draw_custom(pos, b.model, b.color, b.refraction)
 
-    mobs_copy = mobs.copy() # Copy pour éviter les erreurs de pointeurs (del ..)
+    mobs_copy = mobs.copy()  # Copy pour éviter les erreurs de pointeurs (del ..)
     for pos in mobs_copy:
         x1, y1, z1 = pos
         if abs(x - x1) < distance_of_view and \
-            abs(y - y1) < distance_of_view and \
-            abs(z - z1) < distance_of_view: # Si l'objet est suffisemment proche du joueur
+                abs(y - y1) < distance_of_view and \
+                abs(z - z1) < distance_of_view:  # Si l'objet est suffisemment proche du joueur
             mobs_copy[pos].draw_mob()
-    items_copy = items.copy() # Copy pour éviter les erreurs de pointeurs (del ..)
+    items_copy = items.copy()  # Copy pour éviter les erreurs de pointeurs (del ..)
     for pos in items_copy:
         x1, y1, z1 = pos
         if abs(x - x1) < distance_of_view and \
-            abs(y - y1) < distance_of_view and \
-            abs(z - z1) < distance_of_view: # Si l'objet est suffisemment proche du joueur
+                abs(y - y1) < distance_of_view and \
+                abs(z - z1) < distance_of_view:  # Si l'objet est suffisemment proche du joueur
             for item in items_copy[pos]:
                 item.draw_item()
 
     for pos in paintings:
-        new_pos = list(map(lambda x: x + 0.475, pos)) # Ajuste la position pour coller le tableau contre le mur
+        new_pos = list(map(lambda x: x + 0.475, pos))  # Ajuste la position pour coller le tableau contre le mur
         draw_custom(new_pos, paintings[pos], painting_color, painting_refraction)
 
 
@@ -652,6 +676,29 @@ def find_target(pos, yaw_rad, roll_rad):
     return intrpos, (vx, vy, vz)
 
 
+def reset_map():
+    blocks.clear()
+    mobs.clear()
+    mob_sizes.clear()
+    paintings.clear()
+    items.clear()
+    bullets.clear()
+    player.pos = [0, 0, 0]
+    camera.position = (1.0, 2.0, 1.0)
+
+
+def resume():
+    set_mouse_position(0, 0)
+    campain.in_menu = not campain.in_menu
+    campain.in_world = not campain.in_world
+    campain.first_time = False
+
+
+def switch_stage(new_stage):
+    reset_map()
+    campain.switching_stage = True
+    campain.campain_stage = new_stage
+    resume()
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialisation de la caméra
 # ----------------------------------------------------------------------------------------------------------------------
@@ -662,21 +709,21 @@ camera.up = (0.0, 1.0, 0.0)
 camera.fovy = FoV
 camera.projection = CameraProjection.CAMERA_PERSPECTIVE
 cameraMode = CameraMode.CAMERA_CUSTOM
-zoom = .2 # Variable active qui reste à 0 si aucun zoom n'est appliqué ou varie de -1 à 1 suivant l'intensité
+zoom = .2  # Variable active qui reste à 0 si aucun zoom n'est appliqué ou varie de -1 à 1 suivant l'intensité
 player = Player()
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialisation du monde et des dictionnaires
 # ----------------------------------------------------------------------------------------------------------------------
-blocks = {} # Dictionnaire des blocs
-mobs = {} # Dictionnaire des ennemis
-mob_sizes = [] # Liste des tailles des monstres du jeu pour leur hitbox
-paintings = {} # Dictionnaire des tableaux
-items = {} # Dictionnaire des items présents en jeu
-bullets = [] # Liste éphémère des balles vides
-wall_length = 4 # Longueur des murs
-wall_height = 4 # Hauteur des murs
-gun = Gun(main_gun_frames, 12, 7, -100, "main") # Initialisation de larmes sinon ca marche pas je pleure des LARMES
-gun_hotbar = [False, True] # Etat par défaut des armes
-pickable_hotbar = [0, 0] # Etat par défaut du nombres de blocs et monstres collectés
-powerups_hotbar = [False, False, False] # Etat par défaut des PowerUps
+blocks = {}  # Dictionnaire des blocs
+mobs = {}  # Dictionnaire des ennemis
+mob_sizes = []  # Liste des tailles des monstres du jeu pour leur hitbox
+paintings = {}  # Dictionnaire des tableaux
+items = {}  # Dictionnaire des items présents en jeu
+bullets = []  # Liste éphémère des balles vides
+wall_length = 5  # Longueur des murs
+wall_height = 5  # Hauteur des murs
+gun = Gun(main_gun_frames, 12, 7, -100, "main")  # Initialisation de larmes sinon ca marche pas je pleure des LARMES
+gun_hotbar = [False, True]  # Etat par défaut des armes
+pickable_hotbar = [0, 0]  # Etat par défaut du nombres de blocs et monstres collectés
+powerups_hotbar = [False, False, False]  # Etat par défaut des PowerUps
 # ----------------------------------------------------------------------------------------------------------------------
