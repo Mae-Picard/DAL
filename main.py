@@ -283,6 +283,8 @@ while 1:
             for y in range(s.sHeight // 250):
                 draw_texture(s.menu_background, 750 * x, 750 * y, WHITE)
 
+        draw_texture(s.menu_logo, s.sWidth // 4, -100, BLACK)
+        
         mouse_x, mouse_y = get_mouse_position().x, -get_mouse_position().y + my + 128
         mouse_pos = ((int(mouse_x) >> 7) << 7, (int(mouse_y) >> 7) << 7)
 
