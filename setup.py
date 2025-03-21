@@ -79,9 +79,16 @@ mob_model5 = load_model_from_mesh(gen_mesh_cube(1, 2, 0.0))
 painting_north_model1 = load_model_from_mesh(gen_mesh_cube(1.28, 1.7, 0.15))
 painting_north_model2 = load_model_from_mesh(gen_mesh_cube(1.5, 1.25, 0.15))
 painting_north_model3 = load_model_from_mesh(gen_mesh_cube(1.5, 1.5, 0.15))
+painting_north_model4 = load_model_from_mesh(gen_mesh_cube(2, 1.5, 0.15))
+painting_north_model5 = load_model_from_mesh(gen_mesh_cube(1.7, 1.25, 0.15))
+painting_north_model6 = load_model_from_mesh(gen_mesh_cube(1.5, 1.25, 0.15))
+
 painting_west_model1 = load_model_from_mesh(gen_mesh_cube(0.15, 1.7, 1.28))
 painting_west_model2 = load_model_from_mesh(gen_mesh_cube(0.15, 1.25, 1.5))
 painting_west_model3 = load_model_from_mesh(gen_mesh_cube(0.15, 1.5, 1.5))
+painting_west_model4 = load_model_from_mesh(gen_mesh_cube(0.15, 1.5, 2))
+painting_west_model5 = load_model_from_mesh(gen_mesh_cube(0.15, 1.25, 1.7))
+painting_west_model6 = load_model_from_mesh(gen_mesh_cube(0.15, 1.25, 1.5))
 
 riffle_gun_2d_model = load_model_from_mesh(gen_mesh_cube(1.5, 1.5, 0.0))
 powerup_health_model = load_model_from_mesh(gen_mesh_cube(1.7, 1.7, 0.0))
@@ -105,9 +112,16 @@ mob_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resou
 painting_north_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting1.png")
 painting_north_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting2.png")
 painting_north_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting3.png")
+painting_north_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting4.png")
+painting_north_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting5.png")
+painting_north_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting6.png")
+
 painting_west_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting1.png")
 painting_west_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting2.png")
 painting_west_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting3.png")
+painting_west_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting4.png")
+painting_west_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting5.png")
+painting_west_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting6.png")
 # Chargement des textures UI/FX (Interface Utilisateur/Effets Spéciaux)
 UI_hotbar_texture = load_texture("resources/hotbar.png")
 UI_indicators_texture = load_texture("resources/indicators.png")
@@ -135,7 +149,7 @@ blocks_2d_texture = load_texture("resources/blocks_2d_texture.png")
 mobs_2d_texture = load_texture("resources/mobs_2d_texture.png")
 empty_slot_texture = load_texture("resources/empty_slot_texture.png")
 
-# Chargement des textures des armes
+# Chargement des textures/animations des armes
 main_gun_frames = []
 riffle_gun_frames = []
 for i in [0, 1, 2]: main_gun_frames.append(load_texture(f"resources/{i}.png"))
@@ -164,7 +178,8 @@ class Player:
         self.shield = get_fps()  # Bouclier du joueur (durée)
         self.speed = 1.0  # Coefficient de vitesse
         self.resistance = 1.0  # Coefficient de resistance
-
+        self.dmg = 0.0 # Stock le boost de dégat des armes
+    
     def is_colliding(self):
         """Vérifie si le joueur est en collision avec un bloc."""
         global artificial_heigh
@@ -246,7 +261,7 @@ class Player:
 
 class Wall:
     def __init__(self, pos, orientation, model, color, refraction, height=5, length=5):
-        """Construit un mur (en blocs) à une position donnée."""
+        """Construit un mur (en blocs et tableaux) à une position donnée."""
         x, y, z = pos
         flag = True
         if campain.campain_stage == 0:
@@ -254,7 +269,7 @@ class Wall:
             if abs(x - xp) > 32 * wall_length or abs(z - zp) > 32 * wall_length:
                 flag = False
         if flag:
-            if random.random() < 0.5: add_painting = True
+            if random.random() < 0.6: add_painting = True
             else: add_painting = False
             if orientation == "West": l = [1, height, length]
             else: l = [length, height, 1]
@@ -270,7 +285,7 @@ class Wall:
                                 add_painting = False
                                 block_list = []
                                 break
-                            block_list.append(p)
+                        block_list.append(p)
             for p in block_list:
                 Block(p, model, color, refraction)
 
@@ -278,12 +293,14 @@ class Wall:
             if add_painting:
                 if orientation == "West":
                     side = random.choice([0, -1])
-                    pos = (x + side, y + 1, z + length // 2 - 1)
-                    paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3])
+                    pos = (x + side, y + 1, z + 1)
+                    paintings[pos] = random.choice([painting_west_model1, painting_west_model2, painting_west_model3,
+                                                    painting_west_model4, painting_west_model5, painting_west_model6])
                 else:
                     side = random.choice([0, -1])
-                    pos = (x + length // 2 - 1, y + 1, z + side)
-                    paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3])
+                    pos = (x + 1, y + 1, z + side)
+                    paintings[pos] = random.choice([painting_north_model1, painting_north_model2, painting_north_model3,
+                                                    painting_north_model4, painting_north_model5, painting_north_model6])
 
 
 class Floor:
@@ -334,8 +351,11 @@ class Mob:
         self.life = life
         self.initial_life = life
         self.speed = speed
-        if campain.campain_stage == 0 and len(mobs) < int(10 * mob_strength):
-            mobs[pos] = self
+        if campain.campain_stage == 0:
+            if len(mobs) < int(2 * mob_strength):
+                mobs[pos] = self
+        else: mobs[pos] = self
+            
 
     def update_movements(self):
         global mobs
@@ -404,7 +424,7 @@ class Mob:
         x, y, z = self.pos
         if self.life <= 0:
             # Drop d'un item aléatoire
-            if random.choice([0, 1, 2, 3, 4, 5, 6]) != 0:
+            if random.choice([0, 1]) != 0:
                 Item((self.pos), self.model, "Mob")
             elif not gun_hotbar[0]:
                 if random.choice([0, 1, 2, 3]) != 0:
@@ -432,7 +452,7 @@ class Gun:
     def __init__(self, frames, dmg, speed, offset, type):
         self.frames = frames
         self.nb_frames = len(frames)
-        self.dmg = dmg
+        self.dmg = dmg + player.dmg
         self.knockback = dmg ** (1 / 3)
         self.speed = speed
         self.offset = offset
@@ -658,13 +678,13 @@ def find_target(pos, yaw_rad, roll_rad):
     vx, vy, vz = (math.sin(yaw_rad), math.cos(roll_rad), -math.cos(yaw_rad))
     rangex = [-2.25, -1.5, -0.75, 0, 0.75, 1.5, 2.25]
     rangey = [-0.75, 0, 0.75]
-    for t in range(-1, distance_of_view + 2):
-        rx, ry, rz = (x + vx * t, y + vy * t, z + vz * t)
+    for t in range(-1, 2 * distance_of_view + 2):
+        rx, ry, rz = (x + vx * t / 2, y + vy * t / 2, z + vz * t / 2)
         intrpos = (round(rx), round(ry), round(rz))
         if intrpos in mobs or intrpos in blocks:
             return intrpos
-    for t in range(1, distance_of_view):
-        rx, ry, rz = (x + vx * t, y + vy * t, z + vz * t)
+    for t in range(1, 2 * distance_of_view):
+        rx, ry, rz = (x + vx * t / 2, y + vy * t / 2, z + vz * t / 2)
         vx2 = (vx + 1) / 2
         vz2 = (vz + 1) / 2
         for i in rangex:
@@ -673,7 +693,7 @@ def find_target(pos, yaw_rad, roll_rad):
                     intrpos = (round(rx + i * vz2), round(ry + j), round(rz + i * vx2))
                     if intrpos in mobs:
                         return (round(rx), round(ry), round(rz))
-    return intrpos, (vx, vy, vz)
+    return intrpos
 
 
 def reset_map():
@@ -685,7 +705,11 @@ def reset_map():
     bullets.clear()
     player.pos = [0, 0, 0]
     camera.position = (1.0, 2.0, 1.0)
-
+    camera.target = (0.0, 2.0, 0.0)
+    camera.up = (0.0, 1.0, 0.0)
+    player.yaw = -40
+    player.roll = 90
+    player.v = [0, 0, 0]
 
 def resume():
     set_mouse_position(0, 0)

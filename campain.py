@@ -7,8 +7,8 @@ import math
 import random
 import pyray as pr
 
-in_menu = False
-in_world = True
+in_menu = True
+in_world = False
 switching_stage = True
 first_time = True
 
@@ -155,6 +155,7 @@ def wall_pos_for_maze(maze):
 
 
 def create_maze(maze):
+    s.blocks = {}
     walls = wall_pos_for_maze(maze)
     for pos, orientation in walls:
         # dépendant de la région ??
@@ -387,30 +388,29 @@ def gen_campain(campain_stage):
         s.Wall((-100, 4, -18), "North", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         s.Wall((-93, 4, -22), "West", s.red_wall_model, s.red_wall_color, s.red_wall_refraction, height=5, length=10)
         # Mobs 1st Room
-        s.Mob((0, 2, 0), s.mob_model2, 4, 8, 4)
-        s.Mob((-5, 2, 5), s.mob_model1, 3, 4, 3)
-        s.Mob((5, 2, -5), s.mob_model3, 8, 5, 4)
-        s.Mob((-8, 2, 8), s.mob_model2, 4, 8, 4)
-        s.Mob((8, 2, -8), s.mob_model1, 3, 4, 3)
-        s.Mob((-3, 2, -3), s.mob_model3, 8, 5, 4)
-        s.Mob((3, 2, 3), s.mob_model2, 4, 8, 4)
-        s.Mob((-6, 2, -6), s.mob_model1, 3, 4, 3)
-        s.Mob((6, 2, 6), s.mob_model3, 8, 5, 4)
-        s.Mob((0, 2, -8), s.mob_model2, 4, 8, 4)
+        s.Mob((-5, 2, 5), s.mob_model1, 1, 1, 3)
+        s.Mob((5, 2, -5), s.mob_model3, 1, 1, 4)
+        s.Mob((-8, 2, 8), s.mob_model2, 2, 2, 4)
+        s.Mob((8, 2, -8), s.mob_model1, 1, 2, 3)
+        s.Mob((-3, 2, -3), s.mob_model3, 2, 3, 4)
+        s.Mob((3, 2, 3), s.mob_model2, 2, 2, 4)
+        s.Mob((-6, 2, -6), s.mob_model1, 1, 2, 3)
+        s.Mob((6, 2, 6), s.mob_model3, 2, 3, 4)
+        s.Mob((0, 2, -8), s.mob_model2, 2, 2, 4)
 
         # Mobs 2nd Room
         s.Mob((-10, 2, 20), s.mob_model1, 3, 4, 3)
-        s.Mob((-15, 2, 25), s.mob_model3, 8, 5, 4)
-        s.Mob((-5, 2, 30), s.mob_model2, 4, 8, 4)
+        s.Mob((-15, 2, 25), s.mob_model3, 3, 5, 4)
+        s.Mob((-5, 2, 30), s.mob_model2, 4, 6, 4)
         s.Mob((-20, 2, 35), s.mob_model1, 3, 4, 3)
-        s.Mob((-8, 2, 28), s.mob_model3, 8, 5, 4)
-        s.Mob((-12, 2, 32), s.mob_model2, 4, 8, 4)
+        s.Mob((-8, 2, 28), s.mob_model3, 3, 5, 4)
+        s.Mob((-12, 2, 32), s.mob_model2, 4, 6, 4)
         s.Mob((-18, 2, 24), s.mob_model1, 3, 4, 3)
-        s.Mob((-3, 2, 22), s.mob_model2, 4, 8, 4)
-        s.Mob((-25, 2, 29), s.mob_model3, 8, 5, 4)
-        s.Mob((-13, 2, 37), s.mob_model2, 4, 8, 4)
-        s.Mob((-7, 2, 35), s.mob_model5, 4, 8, 2)
-        s.Mob((-29, 2, 23), s.mob_model5, 4, 8, 2)
+        s.Mob((-3, 2, 22), s.mob_model2, 3, 6, 4)
+        s.Mob((-25, 2, 29), s.mob_model3, 4, 5, 4)
+        s.Mob((-13, 2, 37), s.mob_model2, 3, 6, 4)
+        s.Mob((-7, 2, 35), s.mob_model5, 4, 6, 2)
+        s.Mob((-29, 2, 23), s.mob_model5, 4, 6, 2)
 
         # Mobs 3rd Room
         s.Mob((-50, 2, 40), s.mob_model3, 8, 5, 4)

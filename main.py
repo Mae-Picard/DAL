@@ -72,9 +72,9 @@ def update_maze():
     # Summon monsters based on time spent in level
     l = len(s.mobs)
     if s.mob_strength < 2:
-        for i in range(2):
-            x = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
-            z = (random.choice([-1, 0, 1, 2]) - 0.5) * s.wall_length
+        for i in range(1):
+            x = (random.choice([-1, 2]) - 0.5) * s.wall_length
+            z = (random.choice([-1, 2]) - 0.5) * s.wall_length
             model, a, b, c = random.choice([(s.mob_model1, 1, 4, 2),
                                             (s.mob_model2, 3, 7, 4)])
             s.Mob((int(xp + x), 2, int(zp + z)), model, a, b, c)
@@ -127,7 +127,8 @@ def use_powerup(slot):
         if slot == 1:
             s.player.speed += 0.02
         if slot == 2:
-            s.player.damage += 0.25
+            s.gun.dmg += 0.25
+            s.player.dmg += 0.25
             s.mob_strength -= 0.5
             if s.mob_strength < 1: s.mob_strength = 1
 
@@ -135,7 +136,7 @@ def use_powerup(slot):
 runFrames = s.FPS * 2
 selected_slot = 0
 mUIc = 60
-while not window_should_close():
+while 1:
     # ------------------------------------------------------------------------------------------------------------------
     # Gestion des paramètres liés au temps
     # ------------------------------------------------------------------------------------------------------------------
@@ -149,10 +150,8 @@ while not window_should_close():
     if runFrames >= fps * 60: runFrames = 1
     if s.gun.tick_after_shoot > 0: s.gun.tick_after_shoot += 1
     if s.gun.tick_after_shoot > 15: s.gun.tick_after_shoot = 0
-    if abs(s.zoom) > 0.0001:
-        s.zoom /= 2
-    else:
-        s.zoom = 0
+    if abs(s.zoom) > 0.001: s.zoom /= 2
+    else: s.zoom = 0
 
     if not campain.in_menu:
         selected_slot += round(get_mouse_wheel_move())
@@ -203,7 +202,7 @@ while not window_should_close():
 
         if is_key_pressed(KeyboardKey.KEY_P): s.reset_map()
 
-    if is_key_pressed(KeyboardKey.KEY_TAB):
+    if is_key_pressed(KeyboardKey.KEY_ESCAPE) and not campain.first_time:
         set_mouse_position(s.sWidth//2, s.sHeight//5)
         campain.in_menu = not campain.in_menu
         campain.in_world = not campain.in_world
@@ -306,6 +305,7 @@ while not window_should_close():
 
         if is_mouse_button_pressed(MouseButton.MOUSE_BUTTON_LEFT):
             if mouse_pos[1] == -256:
+                close_window()
                 break
             if mouse_pos[1] == 128 and not campain.first_time:
                 s.resume()
@@ -315,5 +315,3 @@ while not window_should_close():
                 s.switch_stage(0)
     # --------------------------------------------------------------------------------------------------------------
     end_drawing()
-
-close_window()
