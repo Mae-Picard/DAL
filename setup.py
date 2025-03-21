@@ -134,6 +134,7 @@ UI_base_layer_right = load_texture("resources/base_layer_right.png")
 FX_bullet_texture = load_texture("resources/bullet.png")
 FX_shadow_texture = resize_image_to_screen("resources/shadow.png", sWidth, sHeight)
 menu_background = load_texture("resources/menubackground.png")
+menu_logo = load_texture("resources/logo.png")
 
 main_gun_2d_texture = load_texture("resources/main_gun_2d_texture.png")
 riffle_gun_2d_texture = load_texture("resources/riffle_gun_2d_texture.png")
