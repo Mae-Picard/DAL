@@ -9,10 +9,7 @@
 ---
 ***Installation***
 ---
-	git clone https://github.com/lygzounette/DAL.git
-	cd DAL
-	pip install -r requirements.txt
-	python main.py
+	.exe available soon !
  
 Anglais / English
 ---
@@ -57,6 +54,7 @@ A retro-styled *FPS* where art meets demons in the world's most famous museum!
 | Scope      | Right Click     |
 | Weapon Switch      | Q     |
 | Use PowerUps      | E     |
+| Menu / Leave      | Escape     |
 
 ***Team***
 
@@ -111,6 +109,7 @@ Un *FPS* rétro où l'art rencontre le chaos dans le musée le plus célèbre du
 | Visée      | Clic Droit     |
 | Changement Arme      | A     |
 | Utiliser Bonus      | E     |
+| Menu / Quitter      | Échape     |
 
 ***Équipe***
 
