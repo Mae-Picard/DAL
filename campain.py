@@ -171,7 +171,7 @@ def create_maze(maze):
     walls = wall_pos_for_maze(maze)
 
     # Paramètres pour le bruit de Perlin
-    scale = 0.01  # Le facteur d'échelle du bruit
+    scale = 0.04  # Le facteur d'échelle du bruit
     octaves = 4  # Le nombre d'octaves du bruit de Perlin
     persistence = 0.5  # La persistance du bruit
     lacunarity = 2.0  # La lacunarity du bruit

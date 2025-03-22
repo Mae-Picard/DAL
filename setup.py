@@ -334,7 +334,10 @@ class Block:
 
     def damage(self):
         """Gère les dégats faits au bloc."""
-        if self.model == white_wall_model or self.model == red_wall_model or self.model == woodenwall_model: return 0
+        if campain.campain_stage < 1:
+            if self.model == white_wall_model: return 0
+        else:
+            if self.model == white_wall_model or self.model == red_wall_model or self.model == woodenwall_model: return 0
         if self.duration <= 0:
             Item((self.pos), self.model, "Block")
             del blocks[self.pos]
