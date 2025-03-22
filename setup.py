@@ -2,6 +2,8 @@ import math
 import random
 from pyray import *
 import campain
+import sys
+import os
 
 # Initialisation générale
 # ----------------------------------------------------------------------------------------------------------------------
@@ -39,6 +41,11 @@ def resize_image_to_screen(image_path, screen_width, screen_height):
     texture = load_texture_from_image(img)
     return texture
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 # Définition des couleurs utilisées dans le jeu (RGBA)
 floor_color = (225, 220, 200, 255)
@@ -96,66 +103,66 @@ powerup_speed_model = load_model_from_mesh(gen_mesh_cube(1.7, 1.7, 0.0))
 powerup_damage_model = load_model_from_mesh(gen_mesh_cube(1.7, 1.7, 0.0))
 
 # Chargement des textures des modèles
-woodenwall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/woodenwall.png")
-red_wall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/redwall.png")
-brickwall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/brickwall.png")
-white_wall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/whitewall.png")
-floor_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/floor.png")
-light_ray_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/lightray.png")
+woodenwall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/woodenwall.png"))
+red_wall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/redwall.png"))
+brickwall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/brickwall.png"))
+white_wall_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/whitewall.png"))
+floor_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/floor.png"))
+light_ray_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/lightray.png"))
 
-mob_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon1.png")
-mob_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon2.png")
-mob_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon3.png")
-mob_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon4.png")
-mob_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/demon5.png")
+mob_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/demon1.png"))
+mob_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/demon2.png"))
+mob_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/demon3.png"))
+mob_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/demon4.png"))
+mob_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/demon5.png"))
 
-painting_north_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting1.png")
-painting_north_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting2.png")
-painting_north_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting3.png")
-painting_north_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting4.png")
-painting_north_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting5.png")
-painting_north_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting6.png")
+painting_north_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting1.png"))
+painting_north_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting2.png"))
+painting_north_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting3.png"))
+painting_north_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting4.png"))
+painting_north_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting5.png"))
+painting_north_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting6.png"))
 
-painting_west_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting1.png")
-painting_west_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting2.png")
-painting_west_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting3.png")
-painting_west_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting4.png")
-painting_west_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting5.png")
-painting_west_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture("resources/painting6.png")
+painting_west_model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting1.png"))
+painting_west_model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting2.png"))
+painting_west_model3.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting3.png"))
+painting_west_model4.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting4.png"))
+painting_west_model5.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting5.png"))
+painting_west_model6.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = load_texture(resource_path("resources/painting6.png"))
 # Chargement des textures UI/FX (Interface Utilisateur/Effets Spéciaux)
-UI_hotbar_texture = load_texture("resources/hotbar.png")
-UI_indicators_texture = load_texture("resources/indicators.png")
-UI_slot_texture = load_texture("resources/slot_highlight.png")
-UI_crossair_texture = load_texture("resources/crossair.png")
-UI_scope_crossair_texture = load_texture("resources/scope_crossair.png")
-UI_life_texture = load_texture("resources/life.png")
-UI_bullets_texture = load_texture("resources/bullets.png")
-UI_base_layer_right = load_texture("resources/base_layer_right.png")
-FX_bullet_texture = load_texture("resources/bullet.png")
-FX_shadow_texture = resize_image_to_screen("resources/shadow.png", sWidth, sHeight)
-menu_background = load_texture("resources/menubackground.png")
-menu_logo = load_texture("resources/logo.png")
+UI_hotbar_texture = load_texture(resource_path("resources/hotbar.png"))
+UI_indicators_texture = load_texture(resource_path("resources/indicators.png"))
+UI_slot_texture = load_texture(resource_path("resources/slot_highlight.png"))
+UI_crossair_texture = load_texture(resource_path("resources/crossair.png"))
+UI_scope_crossair_texture = load_texture(resource_path("resources/scope_crossair.png"))
+UI_life_texture = load_texture(resource_path("resources/life.png"))
+UI_bullets_texture = load_texture(resource_path("resources/bullets.png"))
+UI_base_layer_right = load_texture(resource_path("resources/base_layer_right.png"))
+FX_bullet_texture = load_texture(resource_path("resources/bullet.png"))
+FX_shadow_texture = resize_image_to_screen(resource_path("resources/shadow.png"), sWidth, sHeight)
+menu_background = load_texture(resource_path("resources/menubackground.png"))
+menu_logo = load_texture(resource_path("resources/logo.png"))
 
-main_gun_2d_texture = load_texture("resources/main_gun_2d_texture.png")
-riffle_gun_2d_texture = load_texture("resources/riffle_gun_2d_texture.png")
+main_gun_2d_texture = load_texture(resource_path("resources/main_gun_2d_texture.png"))
+riffle_gun_2d_texture = load_texture(resource_path("resources/riffle_gun_2d_texture.png"))
 riffle_gun_2d_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = riffle_gun_2d_texture
-powerup_health_texture = load_texture("resources/powerup_health_texture.png")
+powerup_health_texture = load_texture(resource_path("resources/powerup_health_texture.png"))
 powerup_health_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = powerup_health_texture
-powerup_speed_texture = load_texture("resources/powerup_speed_texture.png")
+powerup_speed_texture = load_texture(resource_path("resources/powerup_speed_texture.png"))
 powerup_speed_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = powerup_speed_texture
-powerup_damage_texture = load_texture("resources/powerup_damage_texture.png")
+powerup_damage_texture = load_texture(resource_path("resources/powerup_damage_texture.png"))
 powerup_damage_model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = powerup_damage_texture
 
-blocks_2d_texture = load_texture("resources/blocks_2d_texture.png")
-mobs_2d_texture = load_texture("resources/mobs_2d_texture.png")
-empty_slot_texture = load_texture("resources/empty_slot_texture.png")
+blocks_2d_texture = load_texture(resource_path("resources/blocks_2d_texture.png"))
+mobs_2d_texture = load_texture(resource_path("resources/mobs_2d_texture.png"))
+empty_slot_texture = load_texture(resource_path("resources/empty_slot_texture.png"))
 
 # Chargement des textures/animations des armes
 main_gun_frames = []
 riffle_gun_frames = []
-for i in [0, 1, 2]: main_gun_frames.append(load_texture(f"resources/{i}.png"))
-for i in [0, 1, 2, 3, 4, 5]: riffle_gun_frames.append(load_texture(f"resources/riffle{i}.png"))
-flashlight_texture = load_texture("resources/flashlight.png")
+for i in [0, 1, 2]: main_gun_frames.append(load_texture(resource_path(f"resources/{i}.png")))
+for i in [0, 1, 2, 3, 4, 5]: riffle_gun_frames.append(load_texture(resource_path(f"resources/riffle{i}.png")))
+flashlight_texture = load_texture(resource_path("resources/flashlight.png"))
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -487,6 +494,7 @@ class Bullet:
         light_ray_model.transform = matrix_rotate_xyz((DEG2RAD * player.roll, 0, DEG2RAD * player.yaw))
         self.model = light_ray_model  # Model transformé en fonction de la caméra du joueur
         bullets.append(self)
+        gun.bullets -= 1
 
     def draw_bullet(self):
         """Animation de la balle tirée."""

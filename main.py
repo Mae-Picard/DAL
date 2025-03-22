@@ -1,5 +1,7 @@
 import math
 import random
+import sys
+
 from pyray import *
 import campain
 import setup as s
@@ -10,7 +12,6 @@ def shoot():
     if s.gun.bullets > 0:
         runFrames = 1
         gun_frame = s.gun.frames[1]
-        s.gun.bullets -= 1
         s.player.accels[0] -= s.gun.knockback / s.get_fps()
         s.y_player_offset += s.gun.knockback / 18
         s.fade_color = (220 + random.randint(-35, 35), 210 + random.randint(-20, 7), 155 + random.randint(-15, 45), 0)
@@ -135,7 +136,8 @@ def use_powerup(slot):
 
 runFrames = s.FPS * 2
 selected_slot = 0
-mUIc = 60
+mUIc = 0
+mouse_pos = [0, 0]
 while 1:
     # ------------------------------------------------------------------------------------------------------------------
     # Gestion des paramètres liés au temps
@@ -147,7 +149,7 @@ while 1:
 
     fps = abs(round(s.get_fps())) + 1
     runFrames += 1
-    if runFrames >= fps * 60: runFrames = 1
+    if runFrames >= 3600: runFrames = 1
     if s.gun.tick_after_shoot > 0: s.gun.tick_after_shoot += 1
     if s.gun.tick_after_shoot > 15: s.gun.tick_after_shoot = 0
     if abs(s.zoom) > 0.001: s.zoom /= 2
@@ -203,7 +205,7 @@ while 1:
         if is_key_pressed(KeyboardKey.KEY_P): s.reset_map()
 
     if is_key_pressed(KeyboardKey.KEY_ESCAPE) and not campain.first_time:
-        set_mouse_position(s.sWidth//2, s.sHeight//5)
+        runFrames = 0
         campain.in_menu = not campain.in_menu
         campain.in_world = not campain.in_world
 
@@ -259,10 +261,10 @@ while 1:
         draw_texture(s.UI_hotbar_texture, mb_x - 650 + mUIc, mb_y - 215 + mUIc, (200, 210, 150, 255))
         draw_texture(s.UI_indicators_texture, mb_x - 650 + mUIc, mb_y - 215 + mUIc,
                      (200 * s.player.is_sprinting, 210, 150, 225))
-        if mUIc <= 100:
+        if mUIc <= 1:
             draw_texture(s.UI_crossair_texture, mb_x - int(get_mouse_delta().x) + 16, mb_y // 2, (200, 210, 150, 125))
         else:
-            draw_texture(s.UI_scope_crossair_texture, mb_x - int(get_mouse_delta().x) - 32, mb_y // 2, (200, 210, 150, 255))
+            draw_texture(s.UI_scope_crossair_texture, mb_x - int(get_mouse_delta().x) + 32, mb_y // 2 - 32, (200, 210, 150, 255))
         draw_text(f"Mob Strength : {int(s.mob_strength * 100) / 100}", s.sWidth - 300 + mUIc * 2, 160, 30, RED)
         draw_text(f"Player Damage : {int(s.gun.dmg * (1 + 3 * math.sqrt(s.mob_strength)) * 10) / 100}",
                   s.sWidth - 320 + mUIc * 2, 130, 30, GREEN)
@@ -278,20 +280,32 @@ while 1:
     # Affichage du menu
     # --------------------------------------------------------------------------------------------------------------
     if campain.in_menu:
+        if is_key_down(KeyboardKey.KEY_ESCAPE) and runFrames > 20:
+            window_should_close()
+            sys.exit()
+
         mx, my = s.sWidth // 2, s.sHeight // 2
         for x in range(s.sWidth // 250):
             for y in range(s.sHeight // 250):
                 draw_texture(s.menu_background, 750 * x, 750 * y, WHITE)
 
-        draw_texture(s.menu_logo, s.sWidth // 4, -100, BLACK)
-        
-        mouse_x, mouse_y = get_mouse_position().x, -get_mouse_position().y + my + 128
-        mouse_pos = ((int(mouse_x) >> 7) << 7, (int(mouse_y) >> 7) << 7)
+        draw_texture(s.menu_logo, mx - 700, -100, WHITE)
+        draw_text(f"{s.pickable_hotbar[0]} Mobs", 22, 22, 50, DARKGRAY)
+        draw_text(f"{s.pickable_hotbar[1]} Blocs", 22, 77, 50, DARKGRAY)
+        draw_text(f"{s.pickable_hotbar[0]} Mobs", 20, 20, 50, BLACK)
+        draw_text(f"{s.pickable_hotbar[1]} Blocs", 20, 75, 50, BLACK)
 
-        text_boxes = ["-| *quitter", "-| *campagne", "-| *labyrinthe"]
+
+        if is_key_pressed(KeyboardKey.KEY_DOWN):
+            mouse_pos[1] -= 128
+        if is_key_pressed(KeyboardKey.KEY_UP):
+            mouse_pos[1] += 128
+        if mouse_pos[1] < -256: mouse_pos[1] = -256
+        if mouse_pos[1] > 128: mouse_pos[1] = 128
+
+        text_boxes = ["-||| *quitter", "-|| *campagne", "-| *labyrinthe"]
         if not campain.first_time:
-            text_boxes.append("-| *reprendre")
-
+            text_boxes.append("-|> *reprendre")
         for i in range(len(text_boxes)):
             draw_rectangle(50, my - (i - 2) * 128, s.sWidth - 100, 120, (200, 100, 100, 50))
             draw_rectangle(55, my - (i - 2) * 128 + 5, s.sWidth - 110, 110, (70, 15, 10, 255))
@@ -299,21 +313,16 @@ while 1:
             draw_text(text_boxes[i], 65, my - (i - 2) * 128 + 20, 80, BLACK)
 
         if mouse_pos[1] < 130 and mouse_pos[1] > -300:
-            # Afficher le "reprendre" seulement si il y a déjà une partie en cours
+            # Afficher "reprendre" seulement si il y a déjà une partie en cours
             if mouse_pos[1] < 120 or not campain.first_time:
                 draw_rectangle(50, my - mouse_pos[1], s.sWidth - 100, 120, (255, 100, 100, 70))
 
-        draw_texture(s.UI_crossair_texture, int(mouse_x), int(get_mouse_position().y - 16), WHITE)
-
-        if is_mouse_button_pressed(MouseButton.MOUSE_BUTTON_LEFT):
+        if is_mouse_button_pressed(MouseButton.MOUSE_BUTTON_LEFT) or is_key_pressed(KEY_ENTER):
             if mouse_pos[1] == -256:
                 close_window()
                 break
-            if mouse_pos[1] == 128 and not campain.first_time:
-                s.resume()
-            if mouse_pos[1] == -128:
-                s.switch_stage(1)
-            if mouse_pos[1] == 0:
-                s.switch_stage(0)
+            if mouse_pos[1] == 128 and not campain.first_time: s.resume()
+            if mouse_pos[1] == -128: s.switch_stage(1)
+            if mouse_pos[1] == 0: s.switch_stage(0)
     # --------------------------------------------------------------------------------------------------------------
     end_drawing()

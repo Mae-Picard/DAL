@@ -6,6 +6,7 @@ import setup as s
 import math
 import random
 import pyray as pr
+import noise
 
 in_menu = True
 in_world = False
@@ -112,7 +113,7 @@ def connect_cells(maze, a, b):
 
 def add_chunck_maze(player_x, player_y):
     global maze
-    threshold = 10
+    threshold = 20
     flag = True
     if (player_x + threshold, player_y) not in maze:
         new_less_x = (player_x + threshold >> 4) << 4
@@ -155,13 +156,41 @@ def wall_pos_for_maze(maze):
 
 
 def create_maze(maze):
-    s.blocks = {}
+    for pos in s.blocks.copy():
+        x, _, z = pos
+        px, _, pz = s.player.pos
+        if (abs(x - px) // s.wall_length) * s.wall_length + \
+                (abs(z - pz) // s.wall_length) * s.wall_length > 3 * render_distance:
+            del s.blocks[pos]
+    for pos in s.paintings.copy():
+        x, _, z = pos
+        px, _, pz = s.player.pos
+        if (abs(x - px) // s.wall_length) * s.wall_length + \
+                (abs(z - pz) // s.wall_length) * s.wall_length > 3 * render_distance:
+            del s.paintings[pos]
     walls = wall_pos_for_maze(maze)
+
+    # Paramètres pour le bruit de Perlin
+    scale = 0.01  # Le facteur d'échelle du bruit
+    octaves = 4  # Le nombre d'octaves du bruit de Perlin
+    persistence = 0.5  # La persistance du bruit
+    lacunarity = 2.0  # La lacunarity du bruit
+
     for pos, orientation in walls:
-        # dépendant de la région ??
-        model, color, refraction = (s.brickwall_model, s.brickwall_color, s.brickwall_refraction)
-        s.Wall((pos[0] * s.wall_length, 1, pos[1] * s.wall_length), orientation,
-               model, color, refraction, height=5)
+        x, y = pos[0], pos[1]
+        # Calcul du bruit de Perlin à partir des coordonnées (x, y)
+        perlin_noise_value = noise.pnoise2(x * scale, y * scale, octaves=octaves, persistence=persistence, lacunarity=lacunarity)
+        # Définir la couleur du mur en fonction de la valeur du bruit
+        if perlin_noise_value < -0.2:
+            model, color, refraction = (s.woodenwall_model, s.woodenwall_color, s.woodenwall_refraction)
+        elif perlin_noise_value < 0.0:
+            model, color, refraction = (s.white_wall_model, s.white_wall_color, s.white_wall_refraction)
+        elif perlin_noise_value < 0.1:
+            model, color, refraction = (s.red_wall_model, s.red_wall_color, s.red_wall_refraction)
+        else:
+            model, color, refraction = (s.brickwall_model, s.brickwall_color, s.brickwall_refraction)
+        # Création du mur avec la couleur déterminée
+        s.Wall((x * s.wall_length, 1, y * s.wall_length), orientation, model, color, refraction, height=5)
 
 
 def gen_campain(campain_stage):
