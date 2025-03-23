@@ -9,8 +9,30 @@
 ---
 ***Installation***
 ---
-	.exe available soon !
- 
+
+- Last .exe version available !
+
+1. Download .zip:
+
+		Dowload .zip in code > download ZIP, and extract DAL-main anywhere
+
+  	1. Or .exe:
+
+			Download only DAL.exe in files > DAL.exe > ... > download (Ctrl + Shift + S)
+
+2. Execute DAL:
+  
+   		Find DAL.exe ( \DAL-main\DAL-main\DAL.exe) and click on it to execute
+  		If a warning appears click on launch anyways
+
+  	1. Or with main.py:
+	
+	  		Open main.py with a python interpreter
+			Make sure you have installed the packages "raylib" (not pyray) and "noise"
+	  		Start program
+3. Voilà !
+---
+
 Anglais / English
 ---
 
